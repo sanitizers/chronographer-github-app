@@ -11,7 +11,7 @@ jobs:
   include:
   - name: pre-commit.com tool linters
     install:
-    - python -m pip install pre-commit
+    - python -m pip install pre-commit -r requirements.txt
     script:
     - python -m pre_commit run --all-files
 
