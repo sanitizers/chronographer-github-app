@@ -1,0 +1,24 @@
+conditions: v1
+
+dist: xenial
+sudo: required
+language: python
+python:
+- "3.7"
+
+jobs:
+  fast_finish: true
+  include:
+  - name: pre-commit.com tool linters
+    install:
+    - python -m pip install pre-commit
+    script:
+    - python -m pre-commit run --all-files
+
+cache:
+  pip: true
+  directories:
+  - $HOME/.cache/pre-commit
+  - $HOME/.pre-commit
+  - $HOME/virtualenv/python$(python -c 'import platform; print(platform.python_version())')
+  - $HOME/Library/Caches/Homebrew
