@@ -6,6 +6,9 @@ import sys
 from aiohttp import web
 
 
+global aiohttp_server  # Needed to kill all pending tasks correctly
+
+
 async def build_server():
     """Initialize aiohttp's low-level server object with catch-all handler."""
     server = web.Server(route_http_events)
@@ -25,6 +28,7 @@ async def route_http_events(request):
 
 async def run_server(loop, host, port):
     """Spawn an HTTP server in asyncio context."""
+    global aiohttp_server
     aiohttp_server = await build_server()
     server = await loop.create_server(aiohttp_server, host, int(port))
     print(f'======= Serving on http://{host}:{port}/ ======', file=sys.stderr)
@@ -38,7 +42,7 @@ def run_app():
     try:
         loop.run_until_complete(run_server(loop, host, port))
     except KeyboardInterrupt:
-        pass
+        loop.run_until_complete(aiohttp_server.shutdown())
     loop.close()
 
 
