@@ -47,10 +47,13 @@ repos:
   hooks:
   - id: pydocstyle
 
-- repo: git://github.com/pre-commit/mirrors-pylint.git
-  rev: v2.2.2
+- repo: local
   hooks:
-  - id: pylint
+  - id: system
+    language: system
+    name: PyLint
+    files: \.py$
+    entry: python -m pylint.__main__
     args:
     - --msg-template={path}:L {line:3d}:({symbol}) {msg} (C {column:2d}), ::{msg_id}
     - --output-format=colorized

@@ -2,3 +2,4 @@
 aiohttp
 gidgethub
 gunicorn
+pylint
