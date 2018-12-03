@@ -11,9 +11,6 @@ from gidgethub.routing import Router
 from gidgethub.sansio import Event
 
 
-global aiohttp_server  # Needed to kill all pending tasks correctly
-
-
 async def build_server():
     """Initialize aiohttp's low-level server object with catch-all handler."""
     server = web.Server(route_http_events)
@@ -45,23 +42,49 @@ async def route_http_events(request):
     return web.Response(text='OK: GitHub event received.')
 
 
+async def get_tcp_site(aiohttp_server_runner, host, port):
+    """Spawn TCP site."""
+    aiohttp_tcp_site = web.TCPSite(aiohttp_server_runner, host, int(port))
+    await aiohttp_tcp_site.start()
+    print(f'======= Serving on http://{host}:{port}/ ======', file=sys.stderr)
+    return aiohttp_tcp_site
+
+
+async def get_server_runner(aiohttp_server):
+    """Initialize server runner."""
+    aiohttp_server_runner = web.ServerRunner(aiohttp_server)
+    await aiohttp_server_runner.setup()
+    return aiohttp_server_runner
+
+
+async def create_tcp_site(loop, host, port):
+    """Return initialized and listening TCP site."""
+    aiohttp_server = await build_server()
+    aiohttp_server_runner = await get_server_runner(aiohttp_server)
+    aiohttp_tcp_site = await get_tcp_site(
+        aiohttp_server_runner,
+        host, int(port),
+    )
+    return aiohttp_tcp_site
+
+
 async def run_server(loop, host, port):
     """Spawn an HTTP server in asyncio context."""
-    global aiohttp_server
-    aiohttp_server = await build_server()
-    server = await loop.create_server(aiohttp_server, host, int(port))
-    print(f'======= Serving on http://{host}:{port}/ ======', file=sys.stderr)
-    await server.wait_closed()  # block
+    aiohttp_tcp_site = create_tcp_site(loop, host, port)
+    await aiohttp_tcp_site._server.wait_closed()  # block
 
 
 def run_app():
     """Start up a server using CLI args for host and port."""
     host, port = sys.argv[1:]
     loop = asyncio.get_event_loop()
+    aiohttp_tcp_site = loop.run_until_complete(
+        create_tcp_site(loop, host, port),
+    )
     try:
-        loop.run_until_complete(run_server(loop, host, port))
+        loop.run_until_complete(aiohttp_tcp_site._server.wait_closed())
     except KeyboardInterrupt:
-        loop.run_until_complete(aiohttp_server.shutdown())
+        loop.run_until_complete(aiohttp_tcp_site.stop())
     loop.close()
 
 
