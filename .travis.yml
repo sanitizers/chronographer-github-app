@@ -13,7 +13,7 @@ jobs:
     install:
     - python -m pip install pre-commit
     script:
-    - python -m pre-commit run --all-files
+    - python -m pre_commit run --all-files
 
 cache:
   pip: true
