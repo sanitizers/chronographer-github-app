@@ -20,7 +20,6 @@ async def build_server():
 
 async def configure_app(server):
     """Assign settings to the server object."""
-    pass
 
 
 async def route_http_events(request):
@@ -44,9 +43,12 @@ async def route_http_events(request):
 
 async def get_tcp_site(aiohttp_server_runner, host, port):
     """Spawn TCP site."""
-    aiohttp_tcp_site = web.TCPSite(aiohttp_server_runner, host, int(port))
+    aiohttp_tcp_site = web.TCPSite(aiohttp_server_runner, host, port)
     await aiohttp_tcp_site.start()
-    print(f'======= Serving on http://{host}:{port}/ ======', file=sys.stderr)
+    print(
+        f' Serving on http://{host}:{port}/ '.center(50, '='),
+        file=sys.stderr,
+    )
     return aiohttp_tcp_site
 
 
@@ -57,35 +59,36 @@ async def get_server_runner(aiohttp_server):
     return aiohttp_server_runner
 
 
-async def create_tcp_site(loop, host, port):
+async def create_tcp_site(host, port):
     """Return initialized and listening TCP site."""
     aiohttp_server = await build_server()
     aiohttp_server_runner = await get_server_runner(aiohttp_server)
     aiohttp_tcp_site = await get_tcp_site(
         aiohttp_server_runner,
-        host, int(port),
+        host, port,
     )
     return aiohttp_tcp_site
 
 
-async def run_server(loop, host, port):
+async def run_server_forever(host, port):
     """Spawn an HTTP server in asyncio context."""
-    aiohttp_tcp_site = create_tcp_site(loop, host, port)
-    await aiohttp_tcp_site._server.wait_closed()  # block
+    aiohttp_tcp_site = await create_tcp_site(host, port)
+    try:
+        await asyncio.get_event_loop().create_future()  # block
+    except asyncio.CancelledError:
+        print(file=sys.stderr)
+        print(' Stopping the server '.center(50, '='), file=sys.stderr)
+        await aiohttp_tcp_site.stop()
 
 
 def run_app():
     """Start up a server using CLI args for host and port."""
     host, port = sys.argv[1:]
-    loop = asyncio.get_event_loop()
-    aiohttp_tcp_site = loop.run_until_complete(
-        create_tcp_site(loop, host, port),
-    )
+    port = int(port)
     try:
-        loop.run_until_complete(aiohttp_tcp_site._server.wait_closed())
+        asyncio.run(run_server_forever(host, port))
     except KeyboardInterrupt:
-        loop.run_until_complete(aiohttp_tcp_site.stop())
-    loop.close()
+        print(' Exiting the app '.center(50, '='), file=sys.stderr)
 
 
 __name__ == '__main__' and run_app()
