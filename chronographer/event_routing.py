@@ -6,8 +6,9 @@ import os
 
 from aiohttp import web
 from gidgethub import BadRequest
-from gidgethub.routing import Router
 from gidgethub.sansio import Event
+
+from .event_handlers import router
 
 
 async def route_http_events(request):
@@ -17,7 +18,6 @@ async def route_http_events(request):
             method=request.method,
             allowed_methods=('POST'),
         ) from BadRequest(HTTPStatus.METHOD_NOT_ALLOWED)
-    router = Router()
     secret = os.environ.get('GITHUB_WEBHOOK_SECRET')  # TODO: move to cfg layer
     event = Event.from_http(
         request.headers,
