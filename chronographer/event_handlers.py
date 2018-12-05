@@ -18,4 +18,8 @@ async def on_ping(event):
 async def on_install(event):
     """React to GitHub App integration installation webhook event."""
     # TODO: store install id and token
+    # get_install_token(
+    #     app_id=, private_key=,
+    #     access_token_url=payload["installation"]["access_tokens_url"],
+    # )
     print(f'installed {event!r}', file=sys.stderr)

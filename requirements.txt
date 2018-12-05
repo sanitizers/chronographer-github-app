@@ -3,4 +3,5 @@ aiohttp
 gidgethub
 gunicorn
 pre-commit
+pyjwt
 pylint
