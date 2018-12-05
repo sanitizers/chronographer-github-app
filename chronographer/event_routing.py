@@ -26,4 +26,4 @@ async def route_http_events(request):
     )
     await asyncio.sleep(1)  # Give GitHub a sec to deal w/ eventual consistency
     await router.dispatch(event)
-    return web.Response(text='OK: GitHub event received.')
+    return web.Response(text=f'OK: GitHub event received. It is {event!r}')
