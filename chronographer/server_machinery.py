@@ -17,6 +17,7 @@ async def build_server():
 
 async def configure_app(server):
     """Assign settings to the server object."""
+    # TODO: pre-load all installations with tokens
 
 
 async def get_tcp_site(aiohttp_server_runner, host, port):
