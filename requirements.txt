@@ -1,5 +1,7 @@
 -c constraints.txt
 aiohttp
+environ-config
+envparse
 gidgethub
 gunicorn
 pre-commit
