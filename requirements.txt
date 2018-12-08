@@ -1,5 +1,6 @@
 -c constraints.txt
 aiohttp
+cryptography
 environ-config
 envparse
 gidgethub
