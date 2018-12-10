@@ -1,5 +1,7 @@
 """GitHub App/bot configuration."""
 
+from functools import lru_cache
+
 import attr
 import environ
 import envparse
@@ -7,6 +9,7 @@ import envparse
 envparse.Env.read_envfile()
 
 
+@lru_cache(maxsize=1)
 def get_config():
     """Return an initialized config instance."""
     return environ.to_config(BotAppConfig)
