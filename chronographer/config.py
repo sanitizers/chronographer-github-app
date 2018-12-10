@@ -27,6 +27,14 @@ class BotAppConfig:
         private_key = environ.var(name='GITHUB_PRIVATE_KEY')
         webhook_secret = environ.var(None, name='GITHUB_WEBHOOK_SECRET')
 
+        __version__ = 0, 0, 1
+        name = 'Chronographer'
+        app_url = 'https://github.com/apps/chronographer'
+        user_agent = (
+            f'{name}-Bot/{".".join(map(str, __version__))}'
+            f' (+{app_url})'
+        )
+
     @environ.config
     class RuntimeConfig:
         """Config of runtime env."""
@@ -44,13 +52,6 @@ class BotAppConfig:
         host = environ.var('0.0.0.0', name='HOST')
         port = environ.var(8080, name='PORT', converter=int)
 
-    __version__ = 0, 0, 1
-    github_app = environ.group(GitHubAppIntegrationConfig)
-    github_app_url = 'https://github.com/apps/chronographer'
-    name = 'Chronographer'
+    github = environ.group(GitHubAppIntegrationConfig)
     server = environ.group(WebServerConfig)
-    user_agent = (
-        f'{name}-Bot/{".".join(map(str, __version__))}'
-        f' (+{github_app_url})'
-    )
     runtime = environ.group(RuntimeConfig)
