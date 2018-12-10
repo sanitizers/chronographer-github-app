@@ -1,4 +1,5 @@
 """Helper utils."""
+import sys
 import time
 
 import aiohttp
@@ -11,6 +12,26 @@ USER_AGENT = (
     f'Chronographer-Bot/{APP_VERSION}'
     ' (+https://github.com/sanitizers/chronographer-github-app)'
 )
+
+
+class SecretStr(str):
+    """String that censors its __repr__ if called from another repr."""
+
+    def __repr__(self):
+        """Produce a string representation."""
+        frame_depth = 1
+
+        try:
+            while True:
+                f = sys._getframe(frame_depth)
+                frame_depth += 1
+
+                if f.f_code.co_name == "__repr__":
+                    return "<SECRET>"
+        except ValueError:
+            pass
+
+        return super().__repr__()
 
 
 def get_gh_jwt(app_id, private_key):
