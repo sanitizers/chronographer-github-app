@@ -1,8 +1,10 @@
 """Helper utils."""
+from datetime import datetime, timezone
 import sys
 import time
 
 import aiohttp
+import attr
 import gidgethub.aiohttp
 import jwt
 
@@ -32,6 +34,25 @@ class SecretStr(str):
             pass
 
         return super().__repr__()
+
+
+@attr.dataclass
+class GitHubInstallationAccessToken:
+    """Struct for installation access token response from GitHub API."""
+
+    token: SecretStr = attr.ib(converter=SecretStr)
+    """Access token for GitHub App Installation."""
+    expires_at: datetime = attr.ib(
+        converter=lambda date_string: datetime.strptime(
+            date_string, '%Y-%m-%dT%H:%M:%SZ',  # empty %z isn't parsed well
+        ).replace(tzinfo=timezone.utc),
+    )
+    """Token expiration time."""
+
+    @property
+    def expired(self):
+        """Check whether this token has expired already."""
+        return datetime.now(timezone.utc) > self.expires_at
 
 
 def get_gh_jwt(app_id, private_key):
