@@ -28,8 +28,8 @@ class SecretStr(str):
                 f = sys._getframe(frame_depth)
                 frame_depth += 1
 
-                if f.f_code.co_name == "__repr__":
-                    return "<SECRET>"
+                if f.f_code.co_name == '__repr__':
+                    return '<SECRET>'
         except ValueError:
             pass
 
