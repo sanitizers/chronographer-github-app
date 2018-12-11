@@ -25,10 +25,12 @@ class SecretStr(str):
 
         try:
             while True:
-                f = sys._getframe(frame_depth)
+                frame = sys._getframe(  # pylint: disable=protected-access
+                    frame_depth,
+                )
                 frame_depth += 1
 
-                if f.f_code.co_name == '__repr__':
+                if frame.f_code.co_name == '__repr__':
                     return '<SECRET>'
         except ValueError:
             pass
