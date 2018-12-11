@@ -3,11 +3,14 @@
 import asyncio
 import sys
 
+from .config import load_dotenv
 from .server_machinery import run_server_forever
 
 
 def run_app():
     """Start up a server using CLI args for host and port."""
+    load_dotenv()
+
     host, port = sys.argv[1:]
     port = int(port)
     try:

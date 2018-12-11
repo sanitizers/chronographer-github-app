@@ -9,7 +9,9 @@ import envparse
 from .utils import SecretStr
 
 
-envparse.Env.read_envfile()
+def load_dotenv():
+    """Read .env into env vars."""
+    envparse.Env.read_envfile()
 
 
 @lru_cache(maxsize=1)
