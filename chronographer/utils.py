@@ -79,6 +79,10 @@ async def get_install_token(*, app_id, private_key, access_token_url):
         gh_api = gidgethub.aiohttp.GitHubAPI(
             session,
             USER_AGENT,
-            jwt=gh_jwt,
         )
-        return await gh_api.getitem(access_token_url)['token']
+        return GitHubInstallationAccessToken(**(await gh_api.post(
+            access_token_url,
+            data=b'',
+            jwt=gh_jwt,
+            accept='application/vnd.github.machine-man-preview+json',
+        )))
