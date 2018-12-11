@@ -15,11 +15,11 @@ def get_config():
     return environ.to_config(BotAppConfig)
 
 
-@environ.config
+@environ.config  # pylint: disable=too-few-public-methods
 class BotAppConfig:
     """Bot app config."""
 
-    @environ.config
+    @environ.config  # pylint: disable=too-few-public-methods
     class GitHubAppIntegrationConfig:
         """GitHub App auth related config."""
 
@@ -35,7 +35,7 @@ class BotAppConfig:
             f' (+{app_url})'
         )
 
-    @environ.config
+    @environ.config  # pylint: disable=too-few-public-methods
     class RuntimeConfig:
         """Config of runtime env."""
 
@@ -45,7 +45,7 @@ class BotAppConfig:
             validator=attr.validators.in_(('dev', 'prod')),
         )
 
-    @environ.config
+    @environ.config  # pylint: disable=too-few-public-methods
     class WebServerConfig:
         """Config of a web-server."""
 
