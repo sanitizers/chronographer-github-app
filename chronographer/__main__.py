@@ -3,18 +3,24 @@
 import asyncio
 import sys
 
-from .config import load_dotenv
+import attr
+
+from .config import get_config, load_dotenv
 from .server_machinery import run_server_forever
 
 
 def run_app():
     """Start up a server using CLI args for host and port."""
     load_dotenv()
+    config = get_config()
+    if len(sys.argv) > 2:
+        config = attr.evolve(
+            config,
+            server=config.WebServerConfig(*sys.argv[1:3]),
+        )
 
-    host, port = sys.argv[1:]
-    port = int(port)
     try:
-        asyncio.run(run_server_forever(host, port))
+        asyncio.run(run_server_forever(config))
     except KeyboardInterrupt:
         print(' Exiting the app '.center(50, '='), file=sys.stderr)
 

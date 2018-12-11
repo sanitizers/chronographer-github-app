@@ -1,27 +1,26 @@
 """Web-server constructors."""
 
 import asyncio
+from functools import partial
 import sys
 
 from aiohttp import web
 
 from .event_routing import route_http_events
+from .github import GitHubApp
 
 
-async def build_server():
-    """Initialize aiohttp's low-level server object with catch-all handler."""
-    server = web.Server(route_http_events)
-    await configure_app(server)
-    return server
+def get_http_handler(runtime_config, github_app):
+    """Return an HTTP handler with pre-filled args."""
+    return partial(
+        route_http_events, config=runtime_config,
+        github_app=github_app,
+    )
 
 
-async def configure_app(server):
-    """Assign settings to the server object."""
-    # TODO: pre-load all installations with tokens
-
-
-async def get_tcp_site(aiohttp_server_runner, host, port):
-    """Spawn TCP site."""
+async def start_tcp_site(server_config, aiohttp_server_runner):
+    """Return initialized and listening TCP site."""
+    host, port = server_config.host, server_config.port
     aiohttp_tcp_site = web.TCPSite(aiohttp_server_runner, host, port)
     await aiohttp_tcp_site.start()
     print(
@@ -31,30 +30,25 @@ async def get_tcp_site(aiohttp_server_runner, host, port):
     return aiohttp_tcp_site
 
 
-async def get_server_runner(aiohttp_server):
+async def get_server_runner(http_handler):
     """Initialize server runner."""
+    aiohttp_server = web.Server(http_handler)
     aiohttp_server_runner = web.ServerRunner(aiohttp_server)
     await aiohttp_server_runner.setup()
     return aiohttp_server_runner
 
 
-async def create_tcp_site(host, port):
-    """Return initialized and listening TCP site."""
-    aiohttp_server = await build_server()
-    aiohttp_server_runner = await get_server_runner(aiohttp_server)
-    aiohttp_tcp_site = await get_tcp_site(
-        aiohttp_server_runner,
-        host, port,
-    )
-    return aiohttp_tcp_site
-
-
-async def run_server_forever(host, port):
+async def run_server_forever(config):
     """Spawn an HTTP server in asyncio context."""
-    aiohttp_tcp_site = await create_tcp_site(host, port)
-    try:
-        await asyncio.get_event_loop().create_future()  # block
-    except asyncio.CancelledError:
-        print(file=sys.stderr)
-        print(' Stopping the server '.center(50, '='), file=sys.stderr)
-        await aiohttp_tcp_site.stop()
+    async with GitHubApp(config.github) as github_app:
+        http_handler = get_http_handler(config.runtime, github_app)
+        aiohttp_server_runner = await get_server_runner(http_handler)
+        aiohttp_tcp_site = await start_tcp_site(
+            config.server, aiohttp_server_runner,
+        )
+        try:
+            await asyncio.get_event_loop().create_future()  # block
+        except asyncio.CancelledError:
+            print(file=sys.stderr)
+            print(' Stopping the server '.center(50, '='), file=sys.stderr)
+            await aiohttp_tcp_site.stop()
