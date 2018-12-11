@@ -6,7 +6,6 @@ import sys
 
 from aiohttp import web
 from gidgethub import BadRequest, ValidationFailure
-from gidgethub.sansio import Event
 
 from .event_handlers import router
 
@@ -19,13 +18,8 @@ async def route_http_events(request, *, config, github_app):
             allowed_methods=('POST'),
         ) from BadRequest(HTTPStatus.METHOD_NOT_ALLOWED)
 
-    secret = os.environ.get('GITHUB_WEBHOOK_SECRET')  # TODO: move to cfg layer
     try:
-        event = Event.from_http(
-            request.headers,
-            await request.read(),
-            secret=secret,
-        )
+        event = await github_app.event_from_request(request)
     except ValidationFailure as no_signature_exc:
         print(
             'Got an invalid event with GitHub-Delivery-Id='
