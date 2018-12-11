@@ -3,6 +3,7 @@
 import asyncio
 from http import HTTPStatus
 import os
+import sys
 
 from aiohttp import web
 from gidgethub import BadRequest, ValidationFailure
@@ -27,7 +28,18 @@ async def route_http_events(request):
             secret=secret,
         )
     except ValidationFailure as no_signature_exc:
+        print(
+            'Got an invalid event with GitHub-Delivery-Id='
+            f'{event.delivery_id}',
+            file=sys.stderr,
+        )
         raise web.HTTPForbidden from no_signature_exc
+    else:
+        print(
+            'Got a valid event with GitHub-Delivery-Id='
+            f'{event.delivery_id}',
+            file=sys.stderr,
+        )
 
     await asyncio.sleep(1)  # Give GitHub a sec to deal w/ eventual consistency
     await router.dispatch(event)
