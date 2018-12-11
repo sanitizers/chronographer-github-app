@@ -38,7 +38,7 @@ class SecretStr(str):
         return super().__repr__()
 
 
-@attr.dataclass
+@attr.dataclass  # pylint: disable=too-few-public-methods
 class GitHubInstallationAccessToken:
     """Struct for installation access token response from GitHub API."""
 
