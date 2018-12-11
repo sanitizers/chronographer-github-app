@@ -19,4 +19,4 @@ def run_app():
         print(' Exiting the app '.center(50, '='), file=sys.stderr)
 
 
-__name__ == '__main__' and run_app()
+__name__ == '__main__' and run_app()  # pylint: disable=expression-not-assigned
