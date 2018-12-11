@@ -6,6 +6,9 @@ import attr
 import environ
 import envparse
 
+from .utils import SecretStr
+
+
 envparse.Env.read_envfile()
 
 
@@ -24,8 +27,14 @@ class BotAppConfig:
         """GitHub App auth related config."""
 
         app_id = environ.var(name='GITHUB_APP_IDENTIFIER')
-        private_key = environ.var(name='GITHUB_PRIVATE_KEY')
-        webhook_secret = environ.var(None, name='GITHUB_WEBHOOK_SECRET')
+        private_key = environ.var(
+            name='GITHUB_PRIVATE_KEY',
+            converter=SecretStr,
+        )
+        webhook_secret = environ.var(
+            None, name='GITHUB_WEBHOOK_SECRET',
+            converter=lambda s: SecretStr(s) if s is not None else s,
+        )
 
         __version__ = 0, 0, 1
         name = 'Chronographer'
