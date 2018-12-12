@@ -12,6 +12,9 @@ from .event_handlers import router
 
 async def route_http_events(request, *, config, github_app):
     """Dispatch incoming webhook events to corresponsing handlers."""
+    if config.debug:
+        print(f'Running a GitHub App under env={config.env}', file=sys.stderr)
+
     if request.method != 'POST':
         raise web.HTTPMethodNotAllowed(
             method=request.method,
