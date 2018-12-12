@@ -52,6 +52,11 @@ class GitHubApp:
         # pylint: disable=attribute-defined-outside-init
         self._installations = defaultdict(dict)
 
+    @property
+    def gh_jwt(self):
+        """Generate app's JSON Web Token."""
+        return get_gh_jwt(self._config.app_id, self._config.private_key)
+
     async def add_installation(self, event):
         """Retrieve an installation creds from store."""
         install = event.data['installation']
@@ -74,7 +79,6 @@ class GitHubApp:
     async def get_installations(self):
         """Retrieve all installations with access tokens via API."""
         installations = defaultdict(dict)
-        gh_jwt = get_gh_jwt(self._config.app_id, self._config.private_key)
         async with aiohttp.ClientSession() as session:
             gh_api = gidgethub.aiohttp.GitHubAPI(
                 session,
@@ -82,7 +86,7 @@ class GitHubApp:
             )
             async for install in gh_api.getiter(
                     '/app/installations',
-                    jwt=gh_jwt,
+                    jwt=self.gh_jwt,
                     accept='application/vnd.github.machine-man-preview+json',
             ):
                 installations[install['id']] = {
