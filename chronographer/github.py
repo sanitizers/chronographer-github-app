@@ -11,6 +11,9 @@ from .config import BotAppConfig
 from .utils import get_gh_jwt, get_install_token, USER_AGENT
 
 
+GH_INSTALL_EVENTS = 'integration_installation', 'installation'
+
+
 @attr.dataclass
 class GitHubApp:
     """GitHub API wrapper."""
@@ -24,11 +27,19 @@ class GitHubApp:
 
     async def event_from_request(self, request):
         """Get an event object out of HTTP request."""
-        return Event.from_http(
+        event = Event.from_http(
             request.headers,
             await request.read(),
             secret=self._config.webhook_secret,
         )
+        await self.pre_process_webhook_event(event)
+        return event
+
+    async def pre_process_webhook_event(self, event):
+        """Get an event object out of HTTP request."""
+        action = event.data['action']
+        if event.event in GH_INSTALL_EVENTS and action == 'created':
+            await self.add_installation(event)
 
     async def __aenter__(self):
         """Store all installations data before starting."""
