@@ -18,6 +18,10 @@ def run_app():
             config,
             server=config.WebServerConfig(*sys.argv[1:3]),
         )
+    if config.runtime.debug:  # pylint: disable=no-member
+        import os
+        from pprint import pprint
+        pprint(dict(os.environ))
 
     try:
         asyncio.run(run_server_forever(config))
