@@ -9,13 +9,13 @@ import aiohttp
 import attr
 import gidgethub.aiohttp
 import jwt
+import setuptools_scm
 
 
-APP_VERSION = 'unknown'  # TODO: add "/1.0" as in version
-USER_AGENT = (
-    f'Chronographer-Bot/{APP_VERSION}'
-    ' (+https://github.com/sanitizers/chronographer-github-app)'
-)
+APP_NAME = 'Chronographer-Bot'
+APP_VERSION = setuptools_scm.get_version()
+APP_URL = 'https://github.com/apps/chronographer'
+USER_AGENT = f'{APP_NAME}/{APP_VERSION} (+{APP_URL})'
 
 
 class SecretStr(str):

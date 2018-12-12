@@ -6,7 +6,7 @@ import attr
 import environ
 import envparse
 
-from .utils import SecretStr
+from .utils import SecretStr, USER_AGENT
 
 
 def load_dotenv():
@@ -38,13 +38,7 @@ class BotAppConfig:
             converter=lambda s: SecretStr(s) if s is not None else s,
         )
 
-        __version__ = 0, 0, 1
-        name = 'Chronographer'
-        app_url = 'https://github.com/apps/chronographer'
-        user_agent = (
-            f'{name}-Bot/{".".join(map(str, __version__))}'
-            f' (+{app_url})'
-        )
+        user_agent = USER_AGENT
 
     @environ.config  # pylint: disable=too-few-public-methods
     class RuntimeConfig:

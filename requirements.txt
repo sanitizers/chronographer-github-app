@@ -8,3 +8,4 @@ gunicorn
 pre-commit
 pyjwt
 pylint
+setuptools_scm
