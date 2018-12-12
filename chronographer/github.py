@@ -11,7 +11,7 @@ from .config import BotAppConfig
 from .utils import get_gh_jwt, get_install_token, USER_AGENT
 
 
-GH_INSTALL_EVENTS = 'integration_installation', 'installation'
+GH_INSTALL_EVENTS = {'integration_installation', 'installation'}
 
 
 @attr.dataclass
