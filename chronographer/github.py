@@ -2,13 +2,11 @@
 
 from collections import defaultdict
 
-import aiohttp
 import attr
-import gidgethub.aiohttp
 from gidgethub.sansio import Event
 
 from .config import BotAppConfig
-from .utils import get_gh_jwt, get_install_token, USER_AGENT
+from .utils import get_gh_jwt, get_install_token, GitHubAPIClient
 
 
 GH_INSTALL_EVENTS = {'integration_installation', 'installation'}
@@ -79,11 +77,7 @@ class GitHubApp:
     async def get_installations(self):
         """Retrieve all installations with access tokens via API."""
         installations = defaultdict(dict)
-        async with aiohttp.ClientSession() as session:
-            gh_api = gidgethub.aiohttp.GitHubAPI(
-                session,
-                USER_AGENT,
-            )
+        async with GitHubAPIClient() as gh_api:
             async for install in gh_api.getiter(
                     '/app/installations',
                     jwt=self.gh_jwt,
