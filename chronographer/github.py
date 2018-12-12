@@ -20,7 +20,7 @@ class GitHubApp:
     def __attrs_post_init__(self):
         """Initialize installations store."""
         # pylint: disable=attribute-defined-outside-init
-        self._installations = {}
+        self._installations = defaultdict(dict)
 
     async def event_from_request(self, request):
         """Get an event object out of HTTP request."""
@@ -39,7 +39,7 @@ class GitHubApp:
     async def __aexit__(self, *args, **kwargs):
         """Wipe out the installation store."""
         # pylint: disable=attribute-defined-outside-init
-        self._installations = {}
+        self._installations = defaultdict(dict)
 
     async def get_installation(self, event):
         """Retrieve an installation creds from store."""
