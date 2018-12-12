@@ -2,3 +2,9 @@
 
 # chronicler-github-app
 Your severe chronographer who is watching you record all the news to change note files!
+
+## Heroku notes
+
+```console
+heroku buildpacks:add --index 1 https://github.com/ianpurvis/heroku-buildpack-version.git --app=sanitizers-chronographer-bot
+```
