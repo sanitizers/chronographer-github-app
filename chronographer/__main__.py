@@ -21,6 +21,8 @@ def run_app():
     if config.runtime.debug:  # pylint: disable=no-member
         import os
         from pprint import pprint
+        from .utils import APP_VERSION
+        print(f' App version: {APP_VERSION}'.center(50, '='), file=sys.stderr)
         pprint(dict(os.environ))
 
     try:
