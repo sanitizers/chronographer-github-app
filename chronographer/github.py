@@ -54,7 +54,6 @@ class GitHubApp:
 
     async def add_installation(self, event):
         """Retrieve an installation creds from store."""
-        print(event.data)
         install = event.data['installation']
         install_id = install['id']
         self._installations[install_id] = {
