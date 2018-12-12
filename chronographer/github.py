@@ -41,6 +41,21 @@ class GitHubApp:
         # pylint: disable=attribute-defined-outside-init
         self._installations = defaultdict(dict)
 
+    async def add_installation(self, event):
+        """Retrieve an installation creds from store."""
+        print(event.data)
+        install = event.data['installation']
+        install_id = install['id']
+        self._installations[install_id] = {
+            'data': install,
+            'access': await get_install_token(
+                app_id=self._config.app_id,
+                private_key=self._config.private_key,
+                access_token_url=install['access_tokens_url'],
+            ),
+        }
+        return self._installations[install_id]
+
     async def get_installation(self, event):
         """Retrieve an installation creds from store."""
         install_id = event.data['installation']['id']
