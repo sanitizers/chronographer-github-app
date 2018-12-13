@@ -35,7 +35,7 @@ class GitHubApp:
 
     async def pre_process_webhook_event(self, event):
         """Get an event object out of HTTP request."""
-        action = event.data['action']
+        action = event.data.get('action')
         if event.event in GH_INSTALL_EVENTS and action == 'created':
             await self.add_installation(event)
 
