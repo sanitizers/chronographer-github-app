@@ -106,8 +106,6 @@ async def on_pr(event, app_installation):
         update_check_req = UpdateCheckRequest(
             name='Timeline protection',
             status='in_progress',
-            conclusion='neutral',
-            completed_at=f'{datetime.utcnow().isoformat()}Z',
         )
         resp = await gh_api.patch(
             check_runs_updates_uri,
