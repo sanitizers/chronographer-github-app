@@ -80,6 +80,7 @@ async def on_install(event, app_installation):
         'synchronize',
     },
 )
+@listen_to_event_actions('check_run', {'rerequested'})
 async def on_pr(event, app_installation):
     """React to GitHub App pull request webhook event."""
     diff_url = event.data['pull_request']['diff_url']
