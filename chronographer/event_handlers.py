@@ -131,7 +131,7 @@ async def on_pr(event, app_installation):
             status='completed',
             conclusion=(
                 'success' if news_fragments_added
-                else 'action_required'
+                else 'failure'
             ),
             completed_at=f'{datetime.utcnow().isoformat()}Z',
         )
