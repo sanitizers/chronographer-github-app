@@ -83,11 +83,18 @@ async def on_install(event, app_installation):
 @listen_to_event_actions('check_run', {'rerequested'})
 async def on_pr(event, app_installation):
     """React to GitHub App pull request webhook event."""
-    diff_url = event.data['pull_request']['diff_url']
-    head_branch = event.data['pull_request']['head']['ref']
-    head_sha = event.data['pull_request']['head']['sha']
     repo_slug = event.data['repository']['full_name']
     check_runs_base_uri = f'/repos/{repo_slug}/check-runs'
+    if event.event == 'pull_request':
+        pull_request = event.data['pull_request']
+    elif event.event == 'check_run':
+        pull_request = event.data['check_suite']['pull_requests'][0]
+    diff_url = (
+        'https://github.com/{repo_slug}'
+        '/pull/{pull_request["number"]:d}.diff'
+    )
+    head_branch = pull_request['head']['ref']
+    head_sha = pull_request['head']['sha']
     async with GitHubAPIClient() as gh_api:
         gh_api.requester = (
             f'{gh_api.requester} built with {CHECK_IN_USER_AGENT}'
