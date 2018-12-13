@@ -5,6 +5,7 @@ from io import StringIO
 import re
 import sys
 
+import attr
 from check_in.github_api import DEFAULT_USER_AGENT as CHECK_IN_USER_AGENT
 from check_in.github_checks_requests import (
     NewCheckRequest, UpdateCheckRequest,
@@ -89,14 +90,12 @@ async def on_pr(event, app_installation):
             )),
             oauth_token=app_installation['access'].token,
         )
-        check_suite_id = resp['check_suite']['id']
-        check_run_id = resp['id']
         print(
-            f'Check suite ID is f{check_suite_id}\n'
-            f'Check run ID is {check_run_id}',
+            f'Check suite ID is {resp["check_suite"]["id"]}\n'
+            f'Check run ID is {resp["id"]}',
             file=sys.stderr,
         )
-        check_runs_updates_uri = f'{check_runs_base_uri}/{check_run_id:d}'
+        check_runs_updates_uri = f'{check_runs_base_uri}/{resp["id"]:d}'
 
         diff_text = await gh_api.getitem(
             diff_url,
@@ -104,15 +103,16 @@ async def on_pr(event, app_installation):
         )
         diff = PatchSet(StringIO(diff_text))
 
+        update_check_req = UpdateCheckRequest(
+            name='Timeline protection',
+            status='in_progress',
+            conclusion='neutral',
+            completed_at=f'{datetime.utcnow().isoformat()}Z',
+        )
         resp = await gh_api.patch(
             check_runs_updates_uri,
             accept='application/vnd.github.antiope-preview+json',
-            data=to_gh_query(UpdateCheckRequest(
-                name='Timeline protection',
-                status='in_progress',
-                conclusion='neutral',
-                completed_at=f'{datetime.utcnow().isoformat()}Z',
-            )),
+            data=to_gh_query(update_check_req),
             oauth_token=app_installation['access'].token,
         )
 
@@ -120,27 +120,28 @@ async def on_pr(event, app_installation):
             f.is_added_file for f in diff
             if _NEWS_FRAGMENT_RE.search(f.path)
         )
-
-        resp = await gh_api.patch(
-            check_runs_updates_uri,
-            accept='application/vnd.github.antiope-preview+json',
-            data=to_gh_query(UpdateCheckRequest(
-                name='Timeline protection',
-                status='completed',
-                conclusion=(
-                    'success' if news_fragments_added
-                    else 'action_required'
-                ),
-                completed_at=f'{datetime.utcnow().isoformat()}Z',
-            )),
-            oauth_token=app_installation['access'].token,
-        )
-
         print(
             'News fragments are '
             f'{"present" if news_fragments_added else "absent"}',
             file=sys.stderr,
         )
+
+        update_check_req = attr.evolve(
+            update_check_req,
+            status='completed',
+            conclusion=(
+                'success' if news_fragments_added
+                else 'action_required'
+            ),
+            completed_at=f'{datetime.utcnow().isoformat()}Z',
+        )
+        resp = await gh_api.patch(
+            check_runs_updates_uri,
+            accept='application/vnd.github.antiope-preview+json',
+            data=to_gh_query(update_check_req),
+            oauth_token=app_installation['access'].token,
+        )
+
         print(f'got pull_request event', file=sys.stderr)
         print(f'event {event.event!r}', file=sys.stderr)
         print(gh_api)
