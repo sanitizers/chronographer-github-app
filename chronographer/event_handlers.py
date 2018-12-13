@@ -40,8 +40,20 @@ def listen_to_event_actions(event_name, actions):
 @router.register('ping')
 async def on_ping(event, github_app):
     """React to ping webhook event."""
-    print(f'pinged {event!r}', file=sys.stderr)
-    print(f'installation={github_app!r}', file=sys.stderr)
+    app_id = event.data['hook']['app_id']
+    hook_id = event.data['hook_id']
+    zen = event.data['zen']
+
+    action_msg = ' '.join(map(
+        str, [
+            'Processing ping for App ID', app_id,
+            'with Hook ID', hook_id,
+            'sharing Zen:', zen,
+        ],
+    ))
+    print(action_msg, file=sys.stderr)
+
+    print(f'Github App Wrapper: {github_app!r}', file=sys.stderr)
 
 
 @router.register('integration_installation', action='created')
