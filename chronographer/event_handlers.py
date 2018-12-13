@@ -114,10 +114,10 @@ async def on_pr(event, app_installation):
             oauth_token=app_installation['access'].token,
         )
 
-        news_fragments_added = any(
-            f.is_added_file for f in diff
-            if _NEWS_FRAGMENT_RE.search(f.path)
-        )
+        news_fragments_added = [
+            f for f in diff
+            if f.is_added_file and _NEWS_FRAGMENT_RE.search(f.path)
+        ]
         print(
             'News fragments are '
             f'{"present" if news_fragments_added else "absent"}',
@@ -132,6 +132,20 @@ async def on_pr(event, app_installation):
                 else 'failure'
             ),
             completed_at=f'{datetime.utcnow().isoformat()}Z',
+            output={
+                'title': f'{update_check_req.name}: Good to go',
+                'text':
+                    'The following news fragments found: '
+                    f'{news_fragments_added!r}',
+                'summary':
+                    'Great! This change has been recorded to the chronicles',
+            } if news_fragments_added else {
+                'title': f'{update_check_req.name}: History fragments missing',
+                'text': f'No files matching {_NEWS_FRAGMENT_RE} pattern added',
+                'summary':
+                    'Oops... This change does not have a record in the '
+                    'archives. Just as if it never happened!',
+            },
         )
         resp = await gh_api.patch(
             check_runs_updates_uri,
