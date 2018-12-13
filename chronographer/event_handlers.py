@@ -38,10 +38,10 @@ def listen_to_event_actions(event_name, actions):
 
 
 @router.register('ping')
-async def on_ping(event, app_installation):
+async def on_ping(event, github_app):
     """React to ping webhook event."""
     print(f'pinged {event!r}', file=sys.stderr)
-    print(f'installation={app_installation!r}', file=sys.stderr)
+    print(f'installation={github_app!r}', file=sys.stderr)
 
 
 @router.register('integration_installation', action='created')
