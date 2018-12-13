@@ -108,6 +108,7 @@ async def on_pr(event, app_installation):
             check_runs_updates_uri,
             accept='application/vnd.github.antiope-preview+json',
             data=to_gh_query(UpdateCheckRequest(
+                name='Timeline protection',
                 status='in_progress',
                 conclusion='neutral',
                 completed_at=f'{datetime.utcnow().isoformat()}Z',
@@ -124,6 +125,7 @@ async def on_pr(event, app_installation):
             check_runs_updates_uri,
             accept='application/vnd.github.antiope-preview+json',
             data=to_gh_query(UpdateCheckRequest(
+                name='Timeline protection',
                 status='completed',
                 conclusion=(
                     'success' if news_fragments_added
