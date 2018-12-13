@@ -167,6 +167,5 @@ async def on_pr(event, app_installation):
             oauth_token=app_installation['access'].token,
         )
 
-        print(f'got pull_request event', file=sys.stderr)
-        print(f'event {event.event!r}', file=sys.stderr)
+        print(f'got {event.event} event', file=sys.stderr)
         print(gh_api)
