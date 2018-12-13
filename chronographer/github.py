@@ -71,6 +71,9 @@ class GitHubApp:
 
     async def get_installation(self, event):
         """Retrieve an installation creds from store."""
+        if event.event == 'ping':
+            return None
+
         install_id = event.data['installation']['id']
         return self._installations.get(install_id)
 
