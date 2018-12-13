@@ -92,8 +92,8 @@ async def on_pr(event, app_installation):
             event.data['check_run']['check_suite']['pull_requests'][0]
         )
     diff_url = (
-        'https://github.com/{repo_slug}'
-        '/pull/{pull_request["number"]:d}.diff'
+        f'https://github.com/{repo_slug}'
+        f'/pull/{pull_request["number"]:d}.diff'
     )
     head_branch = pull_request['head']['ref']
     head_sha = pull_request['head']['sha']
