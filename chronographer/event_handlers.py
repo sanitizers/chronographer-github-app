@@ -88,7 +88,9 @@ async def on_pr(event, app_installation):
     if event.event == 'pull_request':
         pull_request = event.data['pull_request']
     elif event.event == 'check_run':
-        pull_request = event.data['check_suite']['pull_requests'][0]
+        pull_request = (
+            event.data['check_run']['check_suite']['pull_requests'][0]
+        )
     diff_url = (
         'https://github.com/{repo_slug}'
         '/pull/{pull_request["number"]:d}.diff'
