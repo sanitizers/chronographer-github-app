@@ -9,3 +9,4 @@ pre-commit
 pyjwt
 pylint
 setuptools_scm
+unidiff

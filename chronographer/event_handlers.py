@@ -1,12 +1,19 @@
 """Webhook event handlers."""
 from functools import wraps
+from io import StringIO
+import re
 import sys
 
-import aiohttp
-import gidgethub.aiohttp
 from gidgethub.routing import Router
+from unidiff import PatchSet
 
-from .utils import USER_AGENT
+from .utils import GitHubAPIClient
+
+
+_NEWS_FRAGMENT_RE = re.compile(
+    r'news/[^\./]+\.(removal|feature|bugfix|doc|vendor|trivial)$',
+)
+"""Regexp for the valid location of news fragments."""
 
 
 router = Router()  # pylint: disable=invalid-name
@@ -56,11 +63,21 @@ async def on_install(event, app_installation):
 )
 async def on_pr(event, app_installation):
     """React to GitHub App pull request webhook event."""
-    async with aiohttp.ClientSession() as session:
-        gh_api = gidgethub.aiohttp.GitHubAPI(
-            session,
-            USER_AGENT,
+    diff_url = event.data['pull_request']['diff_url']
+    async with GitHubAPIClient() as gh_api:
+        diff_text = await gh_api.getitem(
+            diff_url,
             oauth_token=app_installation['access'].token,
+        )
+        diff = PatchSet(StringIO(diff_text))
+        news_fragments_added = any(
+            f.is_added_file for f in diff
+            if _NEWS_FRAGMENT_RE.search(f.path)
+        )
+        print(
+            'News fragments are '
+            f'{"present" if news_fragments_added else "absent"}',
+            file=sys.stderr,
         )
         print(f'got pull_request event', file=sys.stderr)
         print(f'event {event.event!r}', file=sys.stderr)
