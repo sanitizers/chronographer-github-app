@@ -160,13 +160,21 @@ async def on_pr(event, app_installation):
                     'The following news fragments found: '
                     f'{news_fragments_added!r}',
                 'summary':
-                    'Great! This change has been recorded to the chronicles',
+                    'Great! This change has been recorded to the chronicles'
+                    '\n\n'
+                    '![You are good at keeping records!]('
+                    'https://theeventchronicle.com'
+                    '/wp-content/uploads/2014/10/vatican-library.jpg)',
             } if news_fragments_added else {
                 'title': f'{update_check_req.name}: History fragments missing',
                 'text': f'No files matching {_NEWS_FRAGMENT_RE} pattern added',
                 'summary':
                     'Oops... This change does not have a record in the '
-                    'archives. Just as if it never happened!',
+                    'archives. Just as if it never happened!'
+                    '\n\n'
+                    '![Keeping chronicles is important]('
+                    'https://theeventchronicle.com'
+                    '/wp-content/uploads/2014/10/vatlib7.jpg)',
             },
         )
         resp = await gh_api.patch(
