@@ -1,12 +1,18 @@
 """Interaction with GitHub API."""
 
 from collections import defaultdict
+from datetime import datetime
+import typing
 
 import attr
 from gidgethub.sansio import Event
 
 from .config import BotAppConfig
-from .utils import get_gh_jwt, get_install_token, GitHubAPIClient
+from .utils import (
+    amap, convert_datetime, dict_to_kwargs_cb,
+    get_gh_jwt, get_install_token,
+    GitHubAPIClient,
+)
 
 
 GH_INSTALL_EVENTS = {'integration_installation', 'installation'}
@@ -60,7 +66,7 @@ class GitHubApp:
         install = event.data['installation']
         install_id = install['id']
         self._installations[install_id] = {
-            'data': install,
+            'data': GitHubAppInstallation(install),
             'access': await get_install_token(
                 app_id=self._config.app_id,
                 private_key=self._config.private_key,
@@ -81,17 +87,66 @@ class GitHubApp:
         """Retrieve all installations with access tokens via API."""
         installations = defaultdict(dict)
         async with GitHubAPIClient() as gh_api:
-            async for install in gh_api.getiter(
-                    '/app/installations',
-                    jwt=self.gh_jwt,
-                    accept='application/vnd.github.machine-man-preview+json',
+            async for install in amap(
+                    dict_to_kwargs_cb(GitHubAppInstallation),
+                    gh_api.getiter(
+                        '/app/installations',
+                        jwt=self.gh_jwt,
+                        accept=''
+                        'application/vnd.github.machine-man-preview+json',
+                    ),
             ):
-                installations[install['id']] = {
+                installations[install.id] = {
                     'data': install,
                     'access': await get_install_token(
                         app_id=self._config.app_id,
                         private_key=self._config.private_key,
-                        access_token_url=install['access_tokens_url'],
+                        access_token_url=install.access_tokens_url,
                     ),
                 }
         return installations
+
+
+@attr.dataclass  # pylint: disable=too-few-public-methods
+class GitHubAppInstallation:
+    """
+    Represents a GitHub App installed into a user or an organization profile.
+
+    It has its own ID for installation which is a unique combo of an app
+    and a profile (user or org).
+    """
+
+    id: int = attr.ib(converter=int)
+    """Installation ID."""
+    app_id: int = attr.ib(converter=int)
+    """GitHub App ID."""
+
+    created_at: datetime = attr.ib(converter=convert_datetime)
+    """Date time when the installation has been installed."""
+    updated_at: datetime = attr.ib(converter=convert_datetime)
+    """Date time when the installation was last updated."""
+
+    account: dict
+    """Target account (org or user) where this GitHub App is installed into."""
+    events: typing.List[str]
+    """List of webhook events the app will be receiving from the account."""
+    permissions: dict
+    """Permission levels of access to API endpoints types."""
+    repository_selection: str = attr.ib(converter=str)
+    """Repository selection mode."""
+    single_file_name: typing.Optional[str]
+    """File path the GitHub app controls."""
+
+    target_id: int = attr.ib(converter=int)
+    """Target account ID where this GitHub App is installed into."""
+    target_type: str = attr.ib(
+        validator=attr.validators.in_(('Organization', 'User')),
+    )
+    """Target account type where this GitHub App is installed into."""
+
+    access_tokens_url: str = attr.ib(converter=str)
+    """API endpoint to retrieve access token from."""
+    html_url: str = attr.ib(converter=str)
+    """URL for controlling the GitHub App Installation."""
+    repositories_url: str = attr.ib(converter=str)
+    """API endpoint listing repositories accissible by this Installation."""
