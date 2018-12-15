@@ -1,5 +1,6 @@
 """Helper utils."""
 from datetime import datetime, timezone
+from functools import singledispatch
 import sys
 import time
 import types
@@ -19,6 +20,31 @@ except LookupError:
     APP_VERSION = 'unknown'
 APP_URL = 'https://github.com/apps/chronographer'
 USER_AGENT = f'{APP_NAME}/{APP_VERSION} (+{APP_URL})'
+
+
+@singledispatch
+def convert_datetime(datetime_obj) -> datetime:
+    """Convert arbitrary object into a datetime instance."""
+    raise ValueError(
+        f'The input arg type {type(datetime_obj)} is not supported',
+    )
+
+
+@convert_datetime.register
+def _(date_unixtime: int) -> datetime:
+    return datetime.fromtimestamp(date_unixtime, timezone.utc)
+
+
+@convert_datetime.register
+def _(date_string: str) -> datetime:
+    date_string = date_string.replace('.000Z', '.000000Z')
+    if '.' not in date_string:
+        date_string = date_string.replace('Z', '.000000Z')
+    if '+' not in date_string:
+        date_string += '+00:00'
+
+    # datetime.fromisoformat() doesn't understand microseconds
+    return datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%S.%fZ%z')
 
 
 class SecretStr(str):
@@ -49,11 +75,7 @@ class GitHubInstallationAccessToken:
 
     token: SecretStr = attr.ib(converter=SecretStr)
     """Access token for GitHub App Installation."""
-    expires_at: datetime = attr.ib(
-        converter=lambda date_string: datetime.strptime(
-            date_string, '%Y-%m-%dT%H:%M:%SZ',  # empty %z isn't parsed well
-        ).replace(tzinfo=timezone.utc),
-    )
+    expires_at: datetime = attr.ib(converter=convert_datetime)
     """Token expiration time."""
 
     @property
