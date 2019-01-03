@@ -5,7 +5,7 @@ import sys
 
 import attr
 
-from .config import get_config, load_dotenv
+from .config import get_config, load_dotenv, WEBHOOK_CONTEXT
 from .server_machinery import run_server_forever
 
 
@@ -18,6 +18,7 @@ def run_app():
             config,
             server=config.WebServerConfig(*sys.argv[1:3]),
         )
+    WEBHOOK_CONTEXT.config = config  # pylint: disable=assigning-non-slot
     if config.runtime.debug:  # pylint: disable=no-member
         from .utils import APP_VERSION
         print(f' App version: {APP_VERSION} '.center(50, '='), file=sys.stderr)
