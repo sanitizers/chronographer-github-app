@@ -18,15 +18,6 @@ from .utils import (
 GH_INSTALL_EVENTS = {'integration_installation', 'installation'}
 
 
-import contextvars
-gh_app = contextvars.ContextVar('github_app', default='default_val')
-gh_app.set('some_val')
-def __getattr__(attr):
-    if attr == 'app':
-        return gh_app.get()
-    raise AttributeError
-
-
 @attr.dataclass
 class GitHubApp:
     """GitHub API wrapper."""

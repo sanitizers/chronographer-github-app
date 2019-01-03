@@ -37,22 +37,18 @@ async def route_http_events(request, *, config, github_app):
             file=sys.stderr,
         )
 
-    from . import github
-    print('access current context')
-    print(github.app)
-
-    from .github import app
-    print('access import-time context value')
-    print(app)
-
-    from .github import gh_app
-    gh_app.set('update context value')
-
-    print('app is still pointing to old val')
-    print(app)
-
-    print('github.app is pointing to the updated context')
-    print(github.app)
+    from .config import WEBHOOK_CONTEXT
+    print(
+        'Github App Wrapper from context in router: '
+        f'{WEBHOOK_CONTEXT.github_app}',
+        file=sys.stderr,
+    )
+    WEBHOOK_CONTEXT.github_app = 'hehe'  # pylint: disable=assigning-non-slot
+    print(
+        'Github App Wrapper from context in router, after change: '
+        f'{WEBHOOK_CONTEXT.github_app}',
+        file=sys.stderr,
+    )
 
     app_installation = await github_app.get_installation(event)
     event_handler_kwargs = {

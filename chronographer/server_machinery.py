@@ -6,6 +6,7 @@ import sys
 
 from aiohttp import web
 
+from .config import WEBHOOK_CONTEXT
 from .event_routing import route_http_events
 from .github import GitHubApp
 
@@ -41,6 +42,9 @@ async def get_server_runner(http_handler):
 async def run_server_forever(config):
     """Spawn an HTTP server in asyncio context."""
     async with GitHubApp(config.github) as github_app:
+        WEBHOOK_CONTEXT.github_app = (  # pylint: disable=assigning-non-slot
+            github_app
+        )
         http_handler = get_http_handler(config.runtime, github_app)
         aiohttp_server_runner = await get_server_runner(http_handler)
         aiohttp_tcp_site = await start_tcp_site(

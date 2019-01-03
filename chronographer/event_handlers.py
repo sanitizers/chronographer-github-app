@@ -14,6 +14,7 @@ from check_in.github_checks_requests import (
 from gidgethub.routing import Router
 from unidiff import PatchSet
 
+from .config import WEBHOOK_CONTEXT
 from .utils import GitHubAPIClient
 
 
@@ -55,9 +56,11 @@ async def on_ping(event, github_app):
 
     print(f'Github App Wrapper: {github_app!r}', file=sys.stderr)
 
-    from . import github
-    print('in handler')
-    print(github.app)
+    print(
+        'Github App Wrapper from context in ping handler: '
+        f'{WEBHOOK_CONTEXT.github_app}',
+        file=sys.stderr,
+    )
 
 
 @router.register('integration_installation', action='created')
