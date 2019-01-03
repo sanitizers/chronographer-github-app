@@ -37,6 +37,23 @@ async def route_http_events(request, *, config, github_app):
             file=sys.stderr,
         )
 
+    from . import github
+    print('access current context')
+    print(github.app)
+
+    from .github import app
+    print('access import-time context value')
+    print(app)
+
+    from .github import gh_app
+    gh_app.set('update context value')
+
+    print('app is still pointing to old val')
+    print(app)
+
+    print('github.app is pointing to the updated context')
+    print(github.app)
+
     app_installation = await github_app.get_installation(event)
     event_handler_kwargs = {
         'github_app': github_app,

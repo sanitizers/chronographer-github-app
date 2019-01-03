@@ -55,6 +55,10 @@ async def on_ping(event, github_app):
 
     print(f'Github App Wrapper: {github_app!r}', file=sys.stderr)
 
+    from . import github
+    print('in handler')
+    print(github.app)
+
 
 @router.register('integration_installation', action='created')
 @router.register('installation', action='created')  # deprecated alias
