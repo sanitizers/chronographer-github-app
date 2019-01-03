@@ -43,11 +43,6 @@ async def route_http_events(request, *, config, github_app):
         app_installation
     )
 
-    event_handler_kwargs = {
-        'github_app': github_app,
-    } if app_installation is None else {
-        'app_installation': app_installation,
-    }
     await asyncio.sleep(1)  # Give GitHub a sec to deal w/ eventual consistency
-    await router.dispatch(event, **event_handler_kwargs)
+    await router.dispatch(event)
     return web.Response(text=f'OK: GitHub event received. It is {event!r}')

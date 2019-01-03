@@ -39,7 +39,7 @@ def listen_to_event_actions(event_name, actions):
 
 
 @router.register('ping')
-async def on_ping(event, github_app):
+async def on_ping(event):
     """React to ping webhook event."""
     app_id = event.data['hook']['app_id']
     hook_id = event.data['hook_id']
@@ -54,8 +54,6 @@ async def on_ping(event, github_app):
     ))
     print(action_msg, file=sys.stderr)
 
-    print(f'Github App Wrapper: {github_app!r}', file=sys.stderr)
-
     print(
         'Github App Wrapper from context in ping handler: '
         f'{WEBHOOK_CONTEXT.github_app}',
@@ -65,7 +63,7 @@ async def on_ping(event, github_app):
 
 @router.register('integration_installation', action='created')
 @router.register('installation', action='created')  # deprecated alias
-async def on_install(event, app_installation):
+async def on_install(event):
     """React to GitHub App integration installation webhook event."""
     print(f'installed {event!r}', file=sys.stderr)
     print(
@@ -76,7 +74,10 @@ async def on_install(event, app_installation):
         f'installed event delivery_id {event.delivery_id!r}',
         file=sys.stderr,
     )
-    print(f'installation={app_installation!r}', file=sys.stderr)
+    print(
+        f'installation={WEBHOOK_CONTEXT.app_installation!r}',
+        file=sys.stderr,
+    )
 
 
 @listen_to_event_actions(
@@ -88,8 +89,9 @@ async def on_install(event, app_installation):
     },
 )
 @listen_to_event_actions('check_run', {'rerequested'})
-async def on_pr(event, app_installation):
+async def on_pr(event):
     """React to GitHub App pull request webhook event."""
+    app_installation = WEBHOOK_CONTEXT.app_installation
     repo_slug = event.data['repository']['full_name']
     check_runs_base_uri = f'/repos/{repo_slug}/check-runs'
     if event.event == 'pull_request':
