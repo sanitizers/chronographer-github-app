@@ -7,6 +7,7 @@ import sys
 from aiohttp import web
 from gidgethub import BadRequest, ValidationFailure
 
+from .config import WEBHOOK_CONTEXT
 from .event_handlers import router
 
 
@@ -37,20 +38,11 @@ async def route_http_events(request, *, config, github_app):
             file=sys.stderr,
         )
 
-    from .config import WEBHOOK_CONTEXT
-    print(
-        'Github App Wrapper from context in router: '
-        f'{WEBHOOK_CONTEXT.github_app}',
-        file=sys.stderr,
-    )
-    WEBHOOK_CONTEXT.github_app = 'hehe'  # pylint: disable=assigning-non-slot
-    print(
-        'Github App Wrapper from context in router, after change: '
-        f'{WEBHOOK_CONTEXT.github_app}',
-        file=sys.stderr,
+    app_installation = await github_app.get_installation(event)
+    WEBHOOK_CONTEXT.app_installation = (  # pylint: disable=assigning-non-slot
+        app_installation
     )
 
-    app_installation = await github_app.get_installation(event)
     event_handler_kwargs = {
         'github_app': github_app,
     } if app_installation is None else {

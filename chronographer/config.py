@@ -46,6 +46,7 @@ class _ContextMap:
 
 
 WEBHOOK_CONTEXT = _ContextMap(
+    app_installation='app installation',
     config='config context',
     github_app='github app',
 )
