@@ -15,7 +15,7 @@ from gidgethub.routing import Router
 from unidiff import PatchSet
 
 from .config import WEBHOOK_CONTEXT
-from .utils import GitHubAPIClient
+from .utils import GitHubAPIClient, unwrap_webhook_event
 
 
 _NEWS_FRAGMENT_RE = re.compile(
@@ -39,11 +39,10 @@ def listen_to_event_actions(event_name, actions):
 
 
 @router.register('ping')
-async def on_ping(event):
+@unwrap_webhook_event
+async def on_ping(*, hook, hook_id, zen):
     """React to ping webhook event."""
-    app_id = event.data['hook']['app_id']
-    hook_id = event.data['hook_id']
-    zen = event.data['zen']
+    app_id = hook['app_id']
 
     action_msg = ' '.join(map(
         str, [
@@ -63,17 +62,23 @@ async def on_ping(event):
 
 @router.register('integration_installation', action='created')
 @router.register('installation', action='created')  # deprecated alias
-async def on_install(event):
+@unwrap_webhook_event
+async def on_install(
+        action,  # pylint: disable=unused-argument
+        installation,
+        sender,  # pylint: disable=unused-argument
+        repositories=None,  # pylint: disable=unused-argument
+):
     """React to GitHub App integration installation webhook event."""
-    print(f'installed {event!r}', file=sys.stderr)
+    # print(f'installed {event!r}', file=sys.stderr)
     print(
-        f'installed event dat install id {event.data["installation"]["id"]!r}',
+        f'installed event install id {installation["id"]!r}',
         file=sys.stderr,
     )
-    print(
-        f'installed event delivery_id {event.delivery_id!r}',
-        file=sys.stderr,
-    )
+    # print(
+    #     f'installed event delivery_id {event.delivery_id!r}',
+    #     file=sys.stderr,
+    # )
     print(
         f'installation={WEBHOOK_CONTEXT.app_installation!r}',
         file=sys.stderr,

@@ -1,6 +1,6 @@
 """Helper utils."""
 from datetime import datetime, timezone
-from functools import singledispatch
+from functools import singledispatch, wraps
 import sys
 import time
 import types
@@ -20,6 +20,14 @@ except LookupError:
     APP_VERSION = 'unknown'
 APP_URL = 'https://github.com/apps/chronographer'
 USER_AGENT = f'{APP_NAME}/{APP_VERSION} (+{APP_URL})'
+
+
+def unwrap_webhook_event(wrapped_function):
+    """Bypass event object keys-values as args to the handler."""
+    @wraps(wrapped_function)
+    def wrapper(event):
+        return wrapped_function(**event.data)
+    return wrapper
 
 
 @singledispatch
