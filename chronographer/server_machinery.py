@@ -42,6 +42,21 @@ async def get_server_runner(http_handler):
 async def run_server_forever(config):
     """Spawn an HTTP server in asyncio context."""
     async with GitHubApp(config.github) as github_app:
+        print(
+            # pylint: disable=protected-access
+            'Starting the following GitHub App:\n'
+            f'* app id: {github_app._config.app_id}\n'
+            f'* user agent: {github_app._config.user_agent}\n'
+            'It is installed into:',
+            file=sys.stderr,
+        )  # pylint: disable=protected-access
+        for install_id, install_val in github_app._installations.items():
+            print(
+                f'* Installation id {install_id} '
+                f'(expires at {install_val["access"].expires_at!s}, '
+                f'installed to install_val["data"]["account"]["login"])',
+                file=sys.stderr,
+            )
         WEBHOOK_CONTEXT.github_app = (  # pylint: disable=assigning-non-slot
             github_app
         )
