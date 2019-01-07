@@ -49,7 +49,7 @@ repos:
 
 - repo: local
   hooks:
-  - id: system
+  - id: pylint
     language: system
     name: PyLint
     files: \.py$
