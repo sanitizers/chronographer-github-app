@@ -1,4 +1,5 @@
 """Helper utils."""
+from contextlib import AbstractAsyncContextManager
 from datetime import datetime, timezone
 from functools import singledispatch, wraps
 import sys
@@ -93,7 +94,7 @@ class GitHubInstallationAccessToken:
 
 
 @attr.dataclass
-class GitHubAPIClient:
+class GitHubAPIClient(AbstractAsyncContextManager):
     """A client to the GitHub API with an asynchronous CM support."""
 
     _external_session: typing.Optional[aiohttp.ClientSession] = (
@@ -130,7 +131,7 @@ class GitHubAPIClient:
             self,
             exc_type: typing.Optional[typing.Type[BaseException]],
             exc_val: typing.Optional[BaseException],
-            exc_tb: typing.Optional[types.TracebackType]
+            exc_tb: typing.Optional[types.TracebackType],
     ) -> typing.Optional[bool]:
         """Close the current session resource."""
         await self._close_session()

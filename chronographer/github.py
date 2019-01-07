@@ -1,7 +1,9 @@
 """Interaction with GitHub API."""
 
 from collections import defaultdict
+from contextlib import AbstractAsyncContextManager
 from datetime import datetime
+import types
 import typing
 
 import attr
@@ -19,7 +21,7 @@ GH_INSTALL_EVENTS = {'integration_installation', 'installation'}
 
 
 @attr.dataclass
-class GitHubApp:
+class GitHubApp(AbstractAsyncContextManager):
     """GitHub API wrapper."""
 
     _config: BotAppConfig.GitHubAppIntegrationConfig
@@ -45,13 +47,18 @@ class GitHubApp:
         if event.event in GH_INSTALL_EVENTS and action == 'created':
             await self.add_installation(event)
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> 'GitHubApp':
         """Store all installations data before starting."""
         # pylint: disable=attribute-defined-outside-init
         self._installations = await self.get_installations()
         return self
 
-    async def __aexit__(self, *args, **kwargs):
+    async def __aexit__(
+            self,
+            exc_type: typing.Optional[typing.Type[BaseException]],
+            exc_val: typing.Optional[BaseException],
+            exc_tb: typing.Optional[types.TracebackType],
+    ) -> typing.Optional[bool]:
         """Wipe out the installation store."""
         # pylint: disable=attribute-defined-outside-init
         self._installations = defaultdict(dict)

@@ -58,3 +58,4 @@ repos:
     - --msg-template={path}:L {line:3d}:({symbol}) {msg} (C {column:2d}), ::{msg_id}
     - --output-format=colorized
     - --known-standard-library=contextvars
+    - --min-similarity-lines=6
