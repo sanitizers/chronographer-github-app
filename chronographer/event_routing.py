@@ -7,7 +7,7 @@ import sys
 from aiohttp import web
 from gidgethub import BadRequest, ValidationFailure
 
-from .config import WEBHOOK_CONTEXT
+from .config import RUNTIME_CONTEXT
 from .event_handlers import router
 
 
@@ -39,7 +39,7 @@ async def route_http_events(request, *, config, github_app):
         )
 
     app_installation = await github_app.get_installation(event)
-    WEBHOOK_CONTEXT.app_installation = (  # pylint: disable=assigning-non-slot
+    RUNTIME_CONTEXT.app_installation = (  # pylint: disable=assigning-non-slot
         app_installation
     )
 

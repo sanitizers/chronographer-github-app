@@ -6,7 +6,7 @@ import sys
 
 from aiohttp import web
 
-from .config import WEBHOOK_CONTEXT
+from .config import RUNTIME_CONTEXT
 from .event_routing import route_http_events
 from .github import GitHubApp
 
@@ -57,7 +57,7 @@ async def run_server_forever(config):
                 f'installed to install_val["data"]["account"]["login"])',
                 file=sys.stderr,
             )
-        WEBHOOK_CONTEXT.github_app = (  # pylint: disable=assigning-non-slot
+        RUNTIME_CONTEXT.github_app = (  # pylint: disable=assigning-non-slot
             github_app
         )
         http_handler = get_http_handler(config.runtime, github_app)

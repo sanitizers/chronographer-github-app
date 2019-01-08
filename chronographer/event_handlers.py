@@ -14,7 +14,7 @@ from check_in.github_checks_requests import (
 from gidgethub.routing import Router
 from unidiff import PatchSet
 
-from .config import WEBHOOK_CONTEXT
+from .config import RUNTIME_CONTEXT
 from .utils import GitHubAPIClient, unwrap_webhook_event
 
 
@@ -55,7 +55,7 @@ async def on_ping(*, hook, hook_id, zen):
 
     print(
         'Github App Wrapper from context in ping handler: '
-        f'{WEBHOOK_CONTEXT.github_app}',
+        f'{RUNTIME_CONTEXT.github_app}',
         file=sys.stderr,
     )
 
@@ -80,7 +80,7 @@ async def on_install(
     #     file=sys.stderr,
     # )
     print(
-        f'installation={WEBHOOK_CONTEXT.app_installation!r}',
+        f'installation={RUNTIME_CONTEXT.app_installation!r}',
         file=sys.stderr,
     )
 
@@ -96,7 +96,7 @@ async def on_install(
 @listen_to_event_actions('check_run', {'rerequested'})
 async def on_pr(event):
     """React to GitHub App pull request webhook event."""
-    app_installation = WEBHOOK_CONTEXT.app_installation
+    app_installation = RUNTIME_CONTEXT.app_installation
     repo_slug = event.data['repository']['full_name']
     check_runs_base_uri = f'/repos/{repo_slug}/check-runs'
     if event.event == 'pull_request':
