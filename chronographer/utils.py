@@ -1,7 +1,7 @@
 """Helper utils."""
 from contextlib import AbstractAsyncContextManager
 from datetime import datetime, timezone
-from functools import singledispatch, wraps
+from functools import wraps
 import sys
 import time
 import types
@@ -12,6 +12,8 @@ import attr
 import gidgethub.aiohttp
 import jwt
 import setuptools_scm
+
+from octomachinery.github.models.utils import convert_datetime
 
 
 APP_NAME = 'Chronographer-Bot'
@@ -29,31 +31,6 @@ def unwrap_webhook_event(wrapped_function):
     def wrapper(event):
         return wrapped_function(**event.data)
     return wrapper
-
-
-@singledispatch
-def convert_datetime(datetime_obj) -> datetime:
-    """Convert arbitrary object into a datetime instance."""
-    raise ValueError(
-        f'The input arg type {type(datetime_obj)} is not supported',
-    )
-
-
-@convert_datetime.register
-def _(date_unixtime: int) -> datetime:
-    return datetime.fromtimestamp(date_unixtime, timezone.utc)
-
-
-@convert_datetime.register
-def _(date_string: str) -> datetime:
-    date_string = date_string.replace('.000Z', '.000000Z')
-    if '.' not in date_string:
-        date_string = date_string.replace('Z', '.000000Z')
-    if '+' not in date_string:
-        date_string += '+00:00'
-
-    # datetime.fromisoformat() doesn't understand microseconds
-    return datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%S.%fZ%z')
 
 
 class SecretStr(str):
