@@ -7,7 +7,9 @@ import attr
 import environ
 import envparse
 
-from .utils import SecretStr, USER_AGENT
+from octomachinery.github.models.utils import SecretStr
+
+from .utils import USER_AGENT
 
 
 class _ContextMap:
