@@ -94,6 +94,7 @@ async def on_install(
     },
 )
 @listen_to_event_actions('check_run', {'rerequested'})
+@listen_to_event_actions('check_suite', {'rerequested'})
 async def on_pr(event):
     """React to GitHub App pull request webhook event."""
     app_installation = RUNTIME_CONTEXT.app_installation
@@ -104,6 +105,10 @@ async def on_pr(event):
     elif event.event == 'check_run':
         pull_request = (
             event.data['check_run']['check_suite']['pull_requests'][0]
+        )
+    elif event.event == 'check_suite':
+        pull_request = (
+            event.data['check_suite']['pull_requests'][0]
         )
     diff_url = (
         f'https://github.com/{repo_slug}'
