@@ -2,9 +2,11 @@
 
 from collections import defaultdict
 from contextlib import AbstractAsyncContextManager
+import sys
 import types
 import typing
 
+from aiohttp.client_exceptions import ClientConnectorError
 import attr
 from gidgethub.sansio import Event
 
@@ -51,7 +53,16 @@ class GitHubApp(AbstractAsyncContextManager):
     async def __aenter__(self) -> 'GitHubApp':
         """Store all installations data before starting."""
         # pylint: disable=attribute-defined-outside-init
-        self._installations = await self.get_installations()
+        try:
+            self._installations = await self.get_installations()
+        except ClientConnectorError as client_error:
+            print('It looks like the GitHub API is offline...', file=sys.stderr)
+            print(
+                f'The following error has happened while trying to grab '
+                f'installations list: {client_error!s}',
+                file=sys.stderr,
+            )
+            self._installations = defaultdict(dict)
         return self
 
     async def __aexit__(
