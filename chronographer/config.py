@@ -2,7 +2,6 @@
 
 from functools import lru_cache
 
-import attr
 import environ
 import envparse
 
