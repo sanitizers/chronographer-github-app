@@ -6,6 +6,7 @@ import attr
 import environ
 import envparse
 
+from octomachinery.app.runtime.config import RuntimeConfig
 from octomachinery.app.runtime.utils import _ContextMap
 from octomachinery.github.models.utils import SecretStr
 
@@ -49,16 +50,6 @@ class BotAppConfig:
         )
 
         user_agent = USER_AGENT
-
-    @environ.config  # pylint: disable=too-few-public-methods
-    class RuntimeConfig:
-        """Config of runtime env."""
-
-        debug = environ.bool_var(False, name='DEBUG')
-        env = environ.var(
-            'prod', name='ENV',
-            validator=attr.validators.in_(('dev', 'prod')),
-        )
 
     @environ.config  # pylint: disable=too-few-public-methods
     class WebServerConfig:
