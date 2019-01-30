@@ -20,7 +20,7 @@ def run_app():
         )
     RUNTIME_CONTEXT.config = config  # pylint: disable=assigning-non-slot
     if config.runtime.debug:  # pylint: disable=no-member
-        from .utils import APP_VERSION
+        from octomachinery.github.config.utils import APP_VERSION
         print(f' App version: {APP_VERSION} '.center(50, '='), file=sys.stderr)
 
     try:

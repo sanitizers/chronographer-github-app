@@ -9,18 +9,9 @@ import aiohttp
 import attr
 import gidgethub.aiohttp
 import jwt
-import setuptools_scm
 
+from octomachinery.github.config.utils import USER_AGENT
 from octomachinery.github.models import GitHubInstallationAccessToken
-
-
-APP_NAME = 'Chronographer-Bot'
-try:
-    APP_VERSION = setuptools_scm.get_version()
-except LookupError:
-    APP_VERSION = 'unknown'
-APP_URL = 'https://github.com/apps/chronographer'
-USER_AGENT = f'{APP_NAME}/{APP_VERSION} (+{APP_URL})'
 
 
 def unwrap_webhook_event(wrapped_function):

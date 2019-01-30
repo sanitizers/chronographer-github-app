@@ -7,9 +7,7 @@ import envparse
 
 from octomachinery.app.runtime.config import RuntimeConfig
 from octomachinery.app.runtime.utils import _ContextMap
-from octomachinery.github.models.utils import SecretStr
-
-from .utils import USER_AGENT
+from octomachinery.github.config.app import GitHubAppIntegrationConfig
 
 
 RUNTIME_CONTEXT = _ContextMap(
@@ -33,22 +31,6 @@ def get_config():
 @environ.config  # pylint: disable=too-few-public-methods
 class BotAppConfig:
     """Bot app config."""
-
-    @environ.config  # pylint: disable=too-few-public-methods
-    class GitHubAppIntegrationConfig:
-        """GitHub App auth related config."""
-
-        app_id = environ.var(name='GITHUB_APP_IDENTIFIER')
-        private_key = environ.var(
-            name='GITHUB_PRIVATE_KEY',
-            converter=SecretStr,
-        )
-        webhook_secret = environ.var(
-            None, name='GITHUB_WEBHOOK_SECRET',
-            converter=lambda s: SecretStr(s) if s is not None else s,
-        )
-
-        user_agent = USER_AGENT
 
     @environ.config  # pylint: disable=too-few-public-methods
     class WebServerConfig:
