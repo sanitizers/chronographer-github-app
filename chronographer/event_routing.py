@@ -7,7 +7,8 @@ import sys
 from aiohttp import web
 from gidgethub import BadRequest, ValidationFailure
 
-from .config import RUNTIME_CONTEXT
+from octomachinery.app.runtime.context import RUNTIME_CONTEXT
+
 from .event_handlers import router
 
 

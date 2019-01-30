@@ -6,7 +6,8 @@ import sys
 
 from aiohttp import web
 
-from .config import RUNTIME_CONTEXT
+from octomachinery.app.runtime.context import RUNTIME_CONTEXT
+
 from .event_routing import route_http_events
 from .github import GitHubApp
 

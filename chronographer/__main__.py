@@ -5,7 +5,9 @@ import sys
 
 import attr
 
-from .config import get_config, load_dotenv, RUNTIME_CONTEXT
+from octomachinery.app.runtime.context import RUNTIME_CONTEXT
+
+from .config import get_config, load_dotenv
 from .server_machinery import run_server_forever
 
 

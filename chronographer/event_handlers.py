@@ -14,7 +14,8 @@ from check_in.github_checks_requests import (
 from gidgethub.routing import Router
 from unidiff import PatchSet
 
-from .config import RUNTIME_CONTEXT
+from octomachinery.app.runtime.context import RUNTIME_CONTEXT
+
 from .utils import GitHubAPIClient, unwrap_webhook_event
 
 
