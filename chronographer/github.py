@@ -10,9 +10,9 @@ from aiohttp.client_exceptions import ClientConnectorError
 import attr
 from gidgethub.sansio import Event
 
+from octomachinery.github.config.app import GitHubAppIntegrationConfig
 from octomachinery.github.models import GitHubAppInstallation
 
-from .config import BotAppConfig
 from .utils import (
     amap, dict_to_kwargs_cb,
     get_gh_jwt, get_install_token,
@@ -27,7 +27,7 @@ GH_INSTALL_EVENTS = {'integration_installation', 'installation'}
 class GitHubApp(AbstractAsyncContextManager):
     """GitHub API wrapper."""
 
-    _config: BotAppConfig.GitHubAppIntegrationConfig
+    _config: GitHubAppIntegrationConfig
 
     def __attrs_post_init__(self):
         """Initialize installations store."""
