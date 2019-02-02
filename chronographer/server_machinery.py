@@ -55,7 +55,7 @@ async def run_server_forever(config):
             print(
                 f'* Installation id {install_id} '
                 f'(expires at {install_val["access"].expires_at!s}, '
-                f'installed to install_val["data"]["account"]["login"])',
+                f'installed to {install_val["data"].account["login"]})',
                 file=sys.stderr,
             )
         RUNTIME_CONTEXT.github_app = (  # pylint: disable=assigning-non-slot
