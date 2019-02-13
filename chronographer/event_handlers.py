@@ -1,6 +1,5 @@
 """Webhook event handlers."""
 from datetime import datetime
-from functools import wraps
 from io import StringIO
 import re
 import sys
@@ -11,9 +10,9 @@ from check_in.github_checks_requests import (
     NewCheckRequest, UpdateCheckRequest,
     to_gh_query,
 )
-from gidgethub.routing import Router
 from unidiff import PatchSet
 
+from octomachinery.app.routing import process_event, process_event_actions
 from octomachinery.app.runtime.context import RUNTIME_CONTEXT
 
 from .utils import GitHubAPIClient, unwrap_webhook_event
@@ -25,21 +24,7 @@ _NEWS_FRAGMENT_RE = re.compile(
 """Regexp for the valid location of news fragments."""
 
 
-router = Router()  # pylint: disable=invalid-name
-
-
-def listen_to_event_actions(event_name, actions):
-    """Subscribe to multiple events."""
-    def decorator(original_function):
-        def wrapper(*args, **kwargs):
-            return original_function(*args, **kwargs)
-        for action in actions:
-            wrapper = router.register(event_name, action=action)(wrapper)
-        return wraps(original_function)(wrapper)
-    return decorator
-
-
-@router.register('ping')
+@process_event('ping')
 @unwrap_webhook_event
 async def on_ping(*, hook, hook_id, zen):
     """React to ping webhook event."""
@@ -61,8 +46,8 @@ async def on_ping(*, hook, hook_id, zen):
     )
 
 
-@router.register('integration_installation', action='created')
-@router.register('installation', action='created')  # deprecated alias
+@process_event('integration_installation', action='created')
+@process_event('installation', action='created')  # deprecated alias
 @unwrap_webhook_event
 async def on_install(
         action,  # pylint: disable=unused-argument
@@ -86,7 +71,7 @@ async def on_install(
     )
 
 
-@listen_to_event_actions(
+@process_event_actions(
     'pull_request',
     {
         'labeled', 'unlabeled',
@@ -94,8 +79,8 @@ async def on_install(
         'synchronize',
     },
 )
-@listen_to_event_actions('check_run', {'rerequested'})
-@listen_to_event_actions('check_suite', {'rerequested'})
+@process_event_actions('check_run', {'rerequested'})
+@process_event_actions('check_suite', {'rerequested'})
 async def on_pr(event):
     """React to GitHub App pull request webhook event."""
     app_installation = RUNTIME_CONTEXT.app_installation

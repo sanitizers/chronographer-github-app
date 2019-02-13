@@ -7,9 +7,8 @@ import sys
 from aiohttp import web
 from gidgethub import BadRequest, ValidationFailure
 
+from octomachinery.app.routing import dispatch_event
 from octomachinery.app.runtime.context import RUNTIME_CONTEXT
-
-from .event_handlers import router
 
 
 async def route_http_events(request, *, config, github_app):
@@ -45,5 +44,5 @@ async def route_http_events(request, *, config, github_app):
     )
 
     await asyncio.sleep(1)  # Give GitHub a sec to deal w/ eventual consistency
-    await router.dispatch(event)
+    await dispatch_event(event)
     return web.Response(text=f'OK: GitHub event received. It is {event!r}')
