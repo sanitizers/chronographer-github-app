@@ -2,7 +2,7 @@
 
 import asyncio
 from functools import partial
-import sys
+import logging
 
 from aiohttp import web
 
@@ -13,6 +13,9 @@ from octomachinery.app.runtime.context import RUNTIME_CONTEXT
 
 from . import event_handlers  # noqa: F401; pylint: disable=unused-import
 from .github import GitHubApp
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_http_handler(runtime_config, github_app):
@@ -28,9 +31,9 @@ async def start_tcp_site(server_config, aiohttp_server_runner):
     host, port = server_config.host, server_config.port
     aiohttp_tcp_site = web.TCPSite(aiohttp_server_runner, host, port)
     await aiohttp_tcp_site.start()
-    print(
-        f' Serving on http://{host}:{port}/ '.center(50, '='),
-        file=sys.stderr,
+    logger.info(
+        f' Serving on http://%s:%s/ '.center(50, '='),
+        host, port,
     )
     return aiohttp_tcp_site
 
@@ -46,20 +49,21 @@ async def get_server_runner(http_handler):
 async def run_server_forever(config):
     """Spawn an HTTP server in asyncio context."""
     async with GitHubApp(config.github) as github_app:
-        print(
-            # pylint: disable=protected-access
+        logger.info(
             'Starting the following GitHub App:\n'
-            f'* app id: {github_app._config.app_id}\n'
-            f'* user agent: {github_app._config.user_agent}\n'
+            '* app id: %s\n'
+            '* user agent: %s\n'
             'It is installed into:',
-            file=sys.stderr,
-        )  # pylint: disable=protected-access
+            github_app._config.app_id,  # pylint: disable=protected-access
+            github_app._config.user_agent,  # pylint: disable=protected-access
+        )
+        # pylint: disable=protected-access
         for install_id, install_val in github_app._installations.items():
-            print(
-                f'* Installation id {install_id} '
-                f'(expires at {install_val["access"].expires_at!s}, '
-                f'installed to {install_val["data"].account["login"]})',
-                file=sys.stderr,
+            logger.info(
+                '* Installation id %s (expires at %s, installed to %s)',
+                install_id,
+                install_val['access'].expires_at,
+                install_val['data'].account['login'],
             )
         RUNTIME_CONTEXT.github_app = (  # pylint: disable=assigning-non-slot
             github_app
@@ -72,6 +76,5 @@ async def run_server_forever(config):
         try:
             await asyncio.get_event_loop().create_future()  # block
         except asyncio.CancelledError:
-            print(file=sys.stderr)
-            print(' Stopping the server '.center(50, '='), file=sys.stderr)
+            logger.info(' Stopping the server '.center(50, '='))
             await aiohttp_tcp_site.stop()
