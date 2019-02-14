@@ -1,6 +1,7 @@
 """Cronicler robot runner."""
 
 import asyncio
+import logging
 import sys
 
 import attr
@@ -9,6 +10,9 @@ from octomachinery.app.runtime.context import RUNTIME_CONTEXT
 
 from .config import get_config, load_dotenv
 from .server_machinery import run_server_forever
+
+
+logger = logging.getLogger(__name__)
 
 
 def run_app():
@@ -22,13 +26,20 @@ def run_app():
         )
     RUNTIME_CONTEXT.config = config  # pylint: disable=assigning-non-slot
     if config.runtime.debug:  # pylint: disable=no-member
+        logging.basicConfig(level=logging.DEBUG)
+
         from octomachinery.github.config.utils import APP_VERSION
-        print(f' App version: {APP_VERSION} '.center(50, '='), file=sys.stderr)
+        logger.debug(
+            ' App version: %s '.center(50, '='),
+            APP_VERSION,
+        )
+    else:
+        logging.basicConfig(level=logging.INFO)
 
     try:
         asyncio.run(run_server_forever(config))
     except KeyboardInterrupt:
-        print(' Exiting the app '.center(50, '='), file=sys.stderr)
+        logger.info(' Exiting the app '.center(50, '='))
 
 
 __name__ == '__main__' and run_app()  # pylint: disable=expression-not-assigned
