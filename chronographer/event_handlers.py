@@ -1,8 +1,8 @@
 """Webhook event handlers."""
 from datetime import datetime
 from io import StringIO
+import logging
 import re
-import sys
 
 import attr
 from check_in.github_api import DEFAULT_USER_AGENT as CHECK_IN_USER_AGENT
@@ -18,6 +18,9 @@ from octomachinery.app.runtime.context import RUNTIME_CONTEXT
 from .utils import GitHubAPIClient, unwrap_webhook_event
 
 
+logger = logging.getLogger(__name__)
+
+
 _NEWS_FRAGMENT_RE = re.compile(
     r'news/[^\./]+\.(removal|feature|bugfix|doc|vendor|trivial)$',
 )
@@ -30,19 +33,18 @@ async def on_ping(*, hook, hook_id, zen):
     """React to ping webhook event."""
     app_id = hook['app_id']
 
-    action_msg = ' '.join(map(
-        str, [
-            'Processing ping for App ID', app_id,
-            'with Hook ID', hook_id,
-            'sharing Zen:', zen,
-        ],
-    ))
-    print(action_msg, file=sys.stderr)
+    logger.info(
+        'Processing ping for App ID %s '
+        'with Hook ID %s '
+        'sharing Zen: %s',
+        app_id,
+        hook_id,
+        zen,
+    )
 
-    print(
-        'Github App Wrapper from context in ping handler: '
-        f'{RUNTIME_CONTEXT.github_app}',
-        file=sys.stderr,
+    logger.info(
+        'Github App Wrapper from context in ping handler: %s',
+        RUNTIME_CONTEXT.github_app,
     )
 
 
@@ -56,18 +58,13 @@ async def on_install(
         repositories=None,  # pylint: disable=unused-argument
 ):
     """React to GitHub App integration installation webhook event."""
-    # print(f'installed {event!r}', file=sys.stderr)
-    print(
-        f'installed event install id {installation["id"]!r}',
-        file=sys.stderr,
+    logger.info(
+        'installed event install id %s',
+        installation['id'],
     )
-    # print(
-    #     f'installed event delivery_id {event.delivery_id!r}',
-    #     file=sys.stderr,
-    # )
-    print(
-        f'installation={RUNTIME_CONTEXT.app_installation!r}',
-        file=sys.stderr,
+    logger.info(
+        'installation=%s',
+        RUNTIME_CONTEXT.app_installation,
     )
 
 
@@ -117,10 +114,11 @@ async def on_pr(event):
             )),
             oauth_token=app_installation['access'].token,
         )
-        print(
-            f'Check suite ID is {resp["check_suite"]["id"]}\n'
-            f'Check run ID is {resp["id"]}',
-            file=sys.stderr,
+        logger.info(
+            'Check suite ID is %s\n'
+            'Check run ID is %s',
+            resp['check_suite']['id'],
+            resp['id'],
         )
         check_runs_updates_uri = f'{check_runs_base_uri}/{resp["id"]:d}'
 
@@ -145,10 +143,10 @@ async def on_pr(event):
             f for f in diff
             if f.is_added_file and _NEWS_FRAGMENT_RE.search(f.path)
         ]
-        print(
-            'News fragments are '
-            f'{"present" if news_fragments_added else "absent"}',
-            file=sys.stderr,
+        logger.info(
+            'News fragments are %s',
+            'present' if news_fragments_added
+            else 'absent',
         )
 
         update_check_req = attr.evolve(
@@ -189,5 +187,5 @@ async def on_pr(event):
             oauth_token=app_installation['access'].token,
         )
 
-        print(f'got {event.event} event', file=sys.stderr)
-        print(gh_api)
+        logger.info('got %s event', event.event)
+        logger.info('gh_api=%s', gh_api)
