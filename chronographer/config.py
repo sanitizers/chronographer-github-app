@@ -6,6 +6,7 @@ import environ
 import envparse
 
 from octomachinery.app.runtime.config import RuntimeConfig
+from octomachinery.app.server.config import WebServerConfig
 from octomachinery.github.config.app import GitHubAppIntegrationConfig
 
 
@@ -23,13 +24,6 @@ def get_config():
 @environ.config  # pylint: disable=too-few-public-methods
 class BotAppConfig:
     """Bot app config."""
-
-    @environ.config  # pylint: disable=too-few-public-methods
-    class WebServerConfig:
-        """Config of a web-server."""
-
-        host = environ.var('0.0.0.0', name='HOST')
-        port = environ.var(8080, name='PORT', converter=int)
 
     github = environ.group(GitHubAppIntegrationConfig)
     server = environ.group(WebServerConfig)
