@@ -14,8 +14,15 @@ from octomachinery.app.runtime.context import RUNTIME_CONTEXT
 from .github import GitHubApp
 
 
+def register_http_handlers():
+    """Register webhook event handlers."""
+    from .event_handlers import subscribe_to_events
+    subscribe_to_events()
+
+
 def get_http_handler(runtime_config, github_app):
     """Return an HTTP handler with pre-filled args."""
+    register_http_handlers()
     return partial(
         route_github_webhook_event, config=runtime_config,
         github_app=github_app,
