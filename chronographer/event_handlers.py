@@ -189,7 +189,3 @@ async def on_pr(event):
 
         logger.info('got %s event', event.event)
         logger.info('gh_api=%s', gh_api)
-
-
-def subscribe_to_events():
-    """Trigger handlers registration on import of this."""
