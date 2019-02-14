@@ -8,6 +8,7 @@ import attr
 
 from octomachinery.app.runtime.context import RUNTIME_CONTEXT
 
+from . import event_handlers  # noqa: F401; pylint: disable=unused-import
 from .config import get_config, load_dotenv
 from .server_machinery import run_server_forever
 

@@ -11,7 +11,6 @@ from octomachinery.app.routing.webhooks_dispatcher import (
 )
 from octomachinery.app.runtime.context import RUNTIME_CONTEXT
 
-from . import event_handlers  # noqa: F401; pylint: disable=unused-import
 from .github import GitHubApp
 
 
