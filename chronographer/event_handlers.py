@@ -13,9 +13,10 @@ from check_in.github_checks_requests import (
 from unidiff import PatchSet
 
 from octomachinery.app.routing import process_event, process_event_actions
+from octomachinery.app.routing.decorators import process_webhook_payload
 from octomachinery.app.runtime.context import RUNTIME_CONTEXT
 
-from .utils import GitHubAPIClient, unwrap_webhook_event
+from .utils import GitHubAPIClient
 
 
 logger = logging.getLogger(__name__)
@@ -28,7 +29,7 @@ _NEWS_FRAGMENT_RE = re.compile(
 
 
 @process_event('ping')
-@unwrap_webhook_event
+@process_webhook_payload
 async def on_ping(*, hook, hook_id, zen):
     """React to ping webhook event."""
     app_id = hook['app_id']
@@ -50,7 +51,7 @@ async def on_ping(*, hook, hook_id, zen):
 
 @process_event('integration_installation', action='created')
 @process_event('installation', action='created')  # deprecated alias
-@unwrap_webhook_event
+@process_webhook_payload
 async def on_install(
         action,  # pylint: disable=unused-argument
         installation,

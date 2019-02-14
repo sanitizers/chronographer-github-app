@@ -1,6 +1,5 @@
 """Helper utils."""
 from contextlib import AbstractAsyncContextManager
-from functools import wraps
 import time
 import types
 import typing
@@ -12,14 +11,6 @@ import jwt
 
 from octomachinery.github.config.utils import USER_AGENT
 from octomachinery.github.models import GitHubInstallationAccessToken
-
-
-def unwrap_webhook_event(wrapped_function):
-    """Bypass event object keys-values as args to the handler."""
-    @wraps(wrapped_function)
-    def wrapper(event):
-        return wrapped_function(**event.data)
-    return wrapper
 
 
 @attr.dataclass
