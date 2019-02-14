@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from contextlib import AbstractAsyncContextManager
-import sys
+import logging
 import types
 import typing
 
@@ -18,6 +18,9 @@ from .utils import (
     get_gh_jwt, get_install_token,
     GitHubAPIClient,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 GH_INSTALL_EVENTS = {'integration_installation', 'installation'}
@@ -56,11 +59,11 @@ class GitHubApp(AbstractAsyncContextManager):
         try:
             self._installations = await self.get_installations()
         except ClientConnectorError as client_error:
-            print('It looks like the GitHub API is offline...', file=sys.stderr)
-            print(
-                f'The following error has happened while trying to grab '
-                f'installations list: {client_error!s}',
-                file=sys.stderr,
+            logger.info('It looks like the GitHub API is offline...')
+            logger.error(
+                'The following error has happened while trying to grab '
+                'installations list: %s',
+                client_error,
             )
             self._installations = defaultdict(dict)
         return self
