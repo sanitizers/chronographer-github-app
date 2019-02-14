@@ -6,16 +6,18 @@ import sys
 
 from aiohttp import web
 
+from octomachinery.app.routing.webhooks_dispatcher import (
+    route_github_webhook_event,
+)
 from octomachinery.app.runtime.context import RUNTIME_CONTEXT
 
-from .event_routing import route_http_events
 from .github import GitHubApp
 
 
 def get_http_handler(runtime_config, github_app):
     """Return an HTTP handler with pre-filled args."""
     return partial(
-        route_http_events, config=runtime_config,
+        route_github_webhook_event, config=runtime_config,
         github_app=github_app,
     )
 
