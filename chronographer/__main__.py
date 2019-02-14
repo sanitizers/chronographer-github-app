@@ -6,10 +6,11 @@ import sys
 
 import attr
 
+from octomachinery.app.config import BotAppConfig
 from octomachinery.app.runtime.context import RUNTIME_CONTEXT
+from octomachinery.app.server.config import WebServerConfig
 
 from . import event_handlers  # noqa: F401; pylint: disable=unused-import
-from .config import get_config, load_dotenv
 from .server_machinery import run_server_forever
 
 
@@ -18,12 +19,11 @@ logger = logging.getLogger(__name__)
 
 def run_app():
     """Start up a server using CLI args for host and port."""
-    load_dotenv()
-    config = get_config()
+    config = BotAppConfig.from_dotenv()
     if len(sys.argv) > 2:
         config = attr.evolve(
             config,
-            server=config.WebServerConfig(*sys.argv[1:3]),
+            server=WebServerConfig(*sys.argv[1:3]),
         )
     RUNTIME_CONTEXT.config = config  # pylint: disable=assigning-non-slot
     if config.runtime.debug:  # pylint: disable=no-member
