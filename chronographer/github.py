@@ -12,9 +12,11 @@ from gidgethub.sansio import Event
 
 from octomachinery.github.config.app import GitHubAppIntegrationConfig
 from octomachinery.github.models import GitHubAppInstallation
+from octomachinery.utils.asynctools import (
+    amap, dict_to_kwargs_cb,
+)
 
 from .utils import (
-    amap, dict_to_kwargs_cb,
     get_gh_jwt, get_install_token,
     GitHubAPIClient,
 )
