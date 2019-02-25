@@ -10,6 +10,7 @@ from aiohttp.client_exceptions import ClientConnectorError
 import attr
 from gidgethub.sansio import Event
 
+from octomachinery.github.api.client import GitHubAPIClient
 from octomachinery.github.config.app import GitHubAppIntegrationConfig
 from octomachinery.github.models import GitHubAppInstallation
 from octomachinery.utils.asynctools import (
@@ -18,7 +19,6 @@ from octomachinery.utils.asynctools import (
 
 from .utils import (
     get_gh_jwt, get_install_token,
-    GitHubAPIClient,
 )
 
 
