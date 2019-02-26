@@ -12,13 +12,15 @@ from gidgethub.sansio import Event
 
 from octomachinery.github.api.client import GitHubAPIClient
 from octomachinery.github.config.app import GitHubAppIntegrationConfig
-from octomachinery.github.models import GitHubAppInstallation
+from octomachinery.github.models import (
+    GitHubAppInstallation, GitHubInstallationAccessToken,
+)
 from octomachinery.utils.asynctools import (
     amap, dict_to_kwargs_cb,
 )
 
 from .utils import (
-    get_gh_jwt, get_install_token,
+    get_gh_jwt,
 )
 
 
@@ -85,15 +87,24 @@ class GitHubApp(AbstractAsyncContextManager):
         """Generate app's JSON Web Token."""
         return get_gh_jwt(self._config.app_id, self._config.private_key)
 
+    async def get_install_token(self, *, access_token_url):
+        """Retrieve installation access token from GitHub API."""
+        gh_jwt = get_gh_jwt(self._config.app_id, self._config.private_key)
+        async with GitHubAPIClient() as gh_api:
+            return GitHubInstallationAccessToken(**(await gh_api.post(
+                access_token_url,
+                data=b'',
+                jwt=gh_jwt,
+                accept='application/vnd.github.machine-man-preview+json',
+            )))
+
     async def add_installation(self, event):
         """Retrieve an installation creds from store."""
         install = event.data['installation']
         install_id = install['id']
         self._installations[install_id] = {
             'data': GitHubAppInstallation(install),
-            'access': await get_install_token(
-                app_id=self._config.app_id,
-                private_key=self._config.private_key,
+            'access': await self.get_install_token(
                 access_token_url=install['access_tokens_url'],
             ),
         }
@@ -122,9 +133,7 @@ class GitHubApp(AbstractAsyncContextManager):
             ):
                 installations[install.id] = {
                     'data': install,
-                    'access': await get_install_token(
-                        app_id=self._config.app_id,
-                        private_key=self._config.private_key,
+                    'access': await self.get_install_token(
                         access_token_url=install.access_tokens_url,
                     ),
                 }
