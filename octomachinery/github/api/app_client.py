@@ -1,4 +1,4 @@
-"""Interaction with GitHub API."""
+"""GitHub App API client."""
 
 from collections import defaultdict
 from contextlib import AbstractAsyncContextManager
@@ -12,13 +12,13 @@ import attr
 from gidgethub.sansio import Event
 import jwt
 
-from octomachinery.github.api.client import GitHubAPIClient
-from octomachinery.github.config.app import GitHubAppIntegrationConfig
-from octomachinery.github.models import (
-    GitHubAppInstallation, GitHubInstallationAccessToken,
-)
-from octomachinery.utils.asynctools import (
+from ...utils.asynctools import (
     amap, dict_to_kwargs_cb,
+)
+from ..api.client import GitHubAPIClient
+from ..config.app import GitHubAppIntegrationConfig
+from ..models import (
+    GitHubAppInstallation, GitHubInstallationAccessToken,
 )
 
 

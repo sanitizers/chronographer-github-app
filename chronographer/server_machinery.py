@@ -9,8 +9,7 @@ from octomachinery.app.routing.webhooks_dispatcher import (
     route_github_webhook_event,
 )
 from octomachinery.app.runtime.context import RUNTIME_CONTEXT
-
-from .github import GitHubApp
+from octomachinery.github.api.app_client import GitHubApp
 
 
 logger = logging.getLogger(__name__)
