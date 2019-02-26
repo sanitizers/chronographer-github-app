@@ -1,7 +1,6 @@
 """Web-server constructors."""
 
 import asyncio
-from functools import partial
 import logging
 
 from aiohttp import web
@@ -15,14 +14,6 @@ from .github import GitHubApp
 
 
 logger = logging.getLogger(__name__)
-
-
-def get_http_handler(runtime_config, github_app):
-    """Return an HTTP handler with pre-filled args."""
-    return partial(
-        route_github_webhook_event, config=runtime_config,
-        github_app=github_app,
-    )
 
 
 async def start_tcp_site(server_config, aiohttp_server_runner):
@@ -67,8 +58,9 @@ async def run_server_forever(config):
         RUNTIME_CONTEXT.github_app = (  # pylint: disable=assigning-non-slot
             github_app
         )
-        http_handler = get_http_handler(config.runtime, github_app)
-        aiohttp_server_runner = await get_server_runner(http_handler)
+        aiohttp_server_runner = await get_server_runner(
+            route_github_webhook_event,
+        )
         aiohttp_tcp_site = await start_tcp_site(
             config.server, aiohttp_server_runner,
         )
