@@ -3,12 +3,14 @@
 from collections import defaultdict
 from contextlib import AbstractAsyncContextManager
 import logging
+import time
 import types
 import typing
 
 from aiohttp.client_exceptions import ClientConnectorError
 import attr
 from gidgethub.sansio import Event
+import jwt
 
 from octomachinery.github.api.client import GitHubAPIClient
 from octomachinery.github.config.app import GitHubAppIntegrationConfig
@@ -17,10 +19,6 @@ from octomachinery.github.models import (
 )
 from octomachinery.utils.asynctools import (
     amap, dict_to_kwargs_cb,
-)
-
-from .utils import (
-    get_gh_jwt,
 )
 
 
@@ -84,17 +82,26 @@ class GitHubApp(AbstractAsyncContextManager):
 
     @property
     def gh_jwt(self):
-        """Generate app's JSON Web Token."""
-        return get_gh_jwt(self._config.app_id, self._config.private_key)
+        """Generate app's JSON Web Token, valid for 60 seconds."""
+        now = int(time.time())
+        payload = {
+            'iat': now,
+            'exp': now + 60,
+            'iss': self._config.app_id,
+        }
+        return jwt.encode(
+            payload,
+            key=self._config.private_key,
+            algorithm='RS256',
+        ).decode('utf-8')
 
     async def get_install_token(self, *, access_token_url):
         """Retrieve installation access token from GitHub API."""
-        gh_jwt = get_gh_jwt(self._config.app_id, self._config.private_key)
         async with GitHubAPIClient() as gh_api:
             return GitHubInstallationAccessToken(**(await gh_api.post(
                 access_token_url,
                 data=b'',
-                jwt=gh_jwt,
+                jwt=self.gh_jwt,
                 accept='application/vnd.github.machine-man-preview+json',
             )))
 
