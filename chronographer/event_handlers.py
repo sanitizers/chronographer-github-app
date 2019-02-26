@@ -15,8 +15,7 @@ from unidiff import PatchSet
 from octomachinery.app.routing import process_event, process_event_actions
 from octomachinery.app.routing.decorators import process_webhook_payload
 from octomachinery.app.runtime.context import RUNTIME_CONTEXT
-
-from .utils import GitHubAPIClient
+from octomachinery.github.api.client import GitHubAPIClient
 
 
 logger = logging.getLogger(__name__)
