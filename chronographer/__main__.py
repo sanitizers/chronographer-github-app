@@ -9,9 +9,11 @@ import attr
 from octomachinery.app.config import BotAppConfig
 from octomachinery.app.runtime.context import RUNTIME_CONTEXT
 from octomachinery.app.server.config import WebServerConfig
+from octomachinery.app.server.machinery import (
+    run_forever as run_server_forever,
+)
 
 from . import event_handlers  # noqa: F401; pylint: disable=unused-import
-from .server_machinery import run_server_forever
 
 
 logger = logging.getLogger(__name__)

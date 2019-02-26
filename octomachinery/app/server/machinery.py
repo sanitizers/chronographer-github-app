@@ -5,11 +5,11 @@ import logging
 
 from aiohttp import web
 
-from octomachinery.app.routing.webhooks_dispatcher import (
+from ...github.api.app_client import GitHubApp
+from ..routing.webhooks_dispatcher import (
     route_github_webhook_event,
 )
-from octomachinery.app.runtime.context import RUNTIME_CONTEXT
-from octomachinery.github.api.app_client import GitHubApp
+from ..runtime.context import RUNTIME_CONTEXT
 
 
 logger = logging.getLogger(__name__)
@@ -35,17 +35,19 @@ async def get_server_runner(http_handler):
     return aiohttp_server_runner
 
 
-async def run_server_forever(config):
+async def run_forever(config):
     """Spawn an HTTP server in asyncio context."""
     async with GitHubApp(config.github) as github_app:
+        logger.info('Starting the following GitHub App:')
         logger.info(
-            'Starting the following GitHub App:\n'
-            '* app id: %s\n'
-            '* user agent: %s\n'
-            'It is installed into:',
+            '* app id: %s',
             github_app._config.app_id,  # pylint: disable=protected-access
+        )
+        logger.info(
+            '* user agent: %s',
             github_app._config.user_agent,  # pylint: disable=protected-access
         )
+        logger.info('It is installed into:')
         # pylint: disable=protected-access
         for install_id, install_val in github_app._installations.items():
             logger.info(
