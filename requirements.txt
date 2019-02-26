@@ -1,6 +1,5 @@
 -c constraints.txt
 aiohttp
-check-in
 cryptography
 environ-config
 envparse

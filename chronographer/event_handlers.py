@@ -5,17 +5,16 @@ import logging
 import re
 
 import attr
-from check_in.github_api import DEFAULT_USER_AGENT as CHECK_IN_USER_AGENT
-from check_in.github_checks_requests import (
-    NewCheckRequest, UpdateCheckRequest,
-    to_gh_query,
-)
 from unidiff import PatchSet
 
 from octomachinery.app.routing import process_event, process_event_actions
 from octomachinery.app.routing.decorators import process_webhook_payload
 from octomachinery.app.runtime.context import RUNTIME_CONTEXT
 from octomachinery.github.api.client import GitHubAPIClient
+from octomachinery.github.models.checks_api_requests import (
+    NewCheckRequest, UpdateCheckRequest,
+    to_gh_query,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -100,10 +99,6 @@ async def on_pr(event):
     head_branch = pull_request['head']['ref']
     head_sha = pull_request['head']['sha']
     async with GitHubAPIClient() as gh_api:
-        gh_api.requester = (
-            f'{gh_api.requester} built with {CHECK_IN_USER_AGENT}'
-        )
-
         resp = await gh_api.post(
             check_runs_base_uri,
             accept='application/vnd.github.antiope-preview+json',
