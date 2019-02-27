@@ -10,7 +10,6 @@ from unidiff import PatchSet
 from octomachinery.app.routing import process_event, process_event_actions
 from octomachinery.app.routing.decorators import process_webhook_payload
 from octomachinery.app.runtime.context import RUNTIME_CONTEXT
-from octomachinery.github.api.client import GitHubAPIClient
 from octomachinery.github.models.checks_api_requests import (
     NewCheckRequest, UpdateCheckRequest,
     to_gh_query,
@@ -98,89 +97,91 @@ async def on_pr(event):
     )
     head_branch = pull_request['head']['ref']
     head_sha = pull_request['head']['sha']
-    async with GitHubAPIClient() as gh_api:
-        resp = await gh_api.post(
-            check_runs_base_uri,
-            accept='application/vnd.github.antiope-preview+json',
-            data=to_gh_query(NewCheckRequest(
-                head_branch, head_sha,
-                name='Timeline protection',
-                started_at=f'{datetime.utcnow().isoformat()}Z',
-            )),
-            oauth_token=app_installation['access'].token,
-        )
-        logger.info(
-            'Check suite ID is %s\n'
-            'Check run ID is %s',
-            resp['check_suite']['id'],
-            resp['id'],
-        )
-        check_runs_updates_uri = f'{check_runs_base_uri}/{resp["id"]:d}'
 
-        diff_text = await gh_api.getitem(
-            diff_url,
-            oauth_token=app_installation['access'].token,
-        )
-        diff = PatchSet(StringIO(diff_text))
+    gh_api = RUNTIME_CONTEXT.app_installation_client
 
-        update_check_req = UpdateCheckRequest(
+    resp = await gh_api.post(
+        check_runs_base_uri,
+        accept='application/vnd.github.antiope-preview+json',
+        data=to_gh_query(NewCheckRequest(
+            head_branch, head_sha,
             name='Timeline protection',
-            status='in_progress',
-        )
-        resp = await gh_api.patch(
-            check_runs_updates_uri,
-            accept='application/vnd.github.antiope-preview+json',
-            data=to_gh_query(update_check_req),
-            oauth_token=app_installation['access'].token,
-        )
+            started_at=f'{datetime.utcnow().isoformat()}Z',
+        )),
+        oauth_token=app_installation['access'].token,
+    )
+    logger.info(
+        'Check suite ID is %s\n'
+        'Check run ID is %s',
+        resp['check_suite']['id'],
+        resp['id'],
+    )
+    check_runs_updates_uri = f'{check_runs_base_uri}/{resp["id"]:d}'
 
-        news_fragments_added = [
-            f for f in diff
-            if f.is_added_file and _NEWS_FRAGMENT_RE.search(f.path)
-        ]
-        logger.info(
-            'News fragments are %s',
-            'present' if news_fragments_added
-            else 'absent',
-        )
+    diff_text = await gh_api.getitem(
+        diff_url,
+        oauth_token=app_installation['access'].token,
+    )
+    diff = PatchSet(StringIO(diff_text))
 
-        update_check_req = attr.evolve(
-            update_check_req,
-            status='completed',
-            conclusion=(
-                'success' if news_fragments_added
-                else 'failure'
-            ),
-            completed_at=f'{datetime.utcnow().isoformat()}Z',
-            output={
-                'title': f'{update_check_req.name}: Good to go',
-                'text':
-                    'The following news fragments found: '
-                    f'{news_fragments_added!r}',
-                'summary':
-                    'Great! This change has been recorded to the chronicles'
-                    '\n\n'
-                    '![You are good at keeping records!]('
-                    'https://theeventchronicle.com'
-                    '/wp-content/uploads/2014/10/vatican-library.jpg)',
-            } if news_fragments_added else {
-                'title': f'{update_check_req.name}: History fragments missing',
-                'text': f'No files matching {_NEWS_FRAGMENT_RE} pattern added',
-                'summary':
-                    'Oops... This change does not have a record in the '
-                    'archives. Just as if it never happened!'
-                    '\n\n'
-                    '![Keeping chronicles is important]('
-                    'https://theeventchronicle.com'
-                    '/wp-content/uploads/2014/10/vatlib7.jpg)',
-            },
-        )
-        resp = await gh_api.patch(
-            check_runs_updates_uri,
-            accept='application/vnd.github.antiope-preview+json',
-            data=to_gh_query(update_check_req),
-            oauth_token=app_installation['access'].token,
-        )
+    update_check_req = UpdateCheckRequest(
+        name='Timeline protection',
+        status='in_progress',
+    )
+    resp = await gh_api.patch(
+        check_runs_updates_uri,
+        accept='application/vnd.github.antiope-preview+json',
+        data=to_gh_query(update_check_req),
+        oauth_token=app_installation['access'].token,
+    )
 
-        logger.info('got %s event', event.event)
-        logger.info('gh_api=%s', gh_api)
+    news_fragments_added = [
+        f for f in diff
+        if f.is_added_file and _NEWS_FRAGMENT_RE.search(f.path)
+    ]
+    logger.info(
+        'News fragments are %s',
+        'present' if news_fragments_added
+        else 'absent',
+    )
+
+    update_check_req = attr.evolve(
+        update_check_req,
+        status='completed',
+        conclusion=(
+            'success' if news_fragments_added
+            else 'failure'
+        ),
+        completed_at=f'{datetime.utcnow().isoformat()}Z',
+        output={
+            'title': f'{update_check_req.name}: Good to go',
+            'text':
+                'The following news fragments found: '
+                f'{news_fragments_added!r}',
+            'summary':
+                'Great! This change has been recorded to the chronicles'
+                '\n\n'
+                '![You are good at keeping records!]('
+                'https://theeventchronicle.com'
+                '/wp-content/uploads/2014/10/vatican-library.jpg)',
+        } if news_fragments_added else {
+            'title': f'{update_check_req.name}: History fragments missing',
+            'text': f'No files matching {_NEWS_FRAGMENT_RE} pattern added',
+            'summary':
+                'Oops... This change does not have a record in the '
+                'archives. Just as if it never happened!'
+                '\n\n'
+                '![Keeping chronicles is important]('
+                'https://theeventchronicle.com'
+                '/wp-content/uploads/2014/10/vatlib7.jpg)',
+        },
+    )
+    resp = await gh_api.patch(
+        check_runs_updates_uri,
+        accept='application/vnd.github.antiope-preview+json',
+        data=to_gh_query(update_check_req),
+        oauth_token=app_installation['access'].token,
+    )
+
+    logger.info('got %s event', event.event)
+    logger.info('gh_api=%s', gh_api)
