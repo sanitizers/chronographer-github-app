@@ -78,7 +78,6 @@ async def on_install(
 @process_event_actions('check_suite', {'rerequested'})
 async def on_pr(event):
     """React to GitHub App pull request webhook event."""
-    app_installation = RUNTIME_CONTEXT.app_installation
     repo_slug = event.data['repository']['full_name']
     check_runs_base_uri = f'/repos/{repo_slug}/check-runs'
     if event.event == 'pull_request':
@@ -108,7 +107,6 @@ async def on_pr(event):
             name='Timeline protection',
             started_at=f'{datetime.utcnow().isoformat()}Z',
         )),
-        oauth_token=app_installation['access'].token,
     )
     logger.info(
         'Check suite ID is %s\n'
@@ -120,7 +118,6 @@ async def on_pr(event):
 
     diff_text = await gh_api.getitem(
         diff_url,
-        oauth_token=app_installation['access'].token,
     )
     diff = PatchSet(StringIO(diff_text))
 
@@ -132,7 +129,6 @@ async def on_pr(event):
         check_runs_updates_uri,
         accept='application/vnd.github.antiope-preview+json',
         data=to_gh_query(update_check_req),
-        oauth_token=app_installation['access'].token,
     )
 
     news_fragments_added = [
@@ -180,7 +176,6 @@ async def on_pr(event):
         check_runs_updates_uri,
         accept='application/vnd.github.antiope-preview+json',
         data=to_gh_query(update_check_req),
-        oauth_token=app_installation['access'].token,
     )
 
     logger.info('got %s event', event.event)
