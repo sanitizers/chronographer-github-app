@@ -109,9 +109,11 @@ async def on_pr(event):
         )),
     )
     logger.info(
-        'Check suite ID is %s\n'
-        'Check run ID is %s',
+        'Check suite ID is %s',
         resp['check_suite']['id'],
+    )
+    logger.info(
+        'Check run ID is %s',
         resp['id'],
     )
     check_runs_updates_uri = f'{check_runs_base_uri}/{resp["id"]:d}'
