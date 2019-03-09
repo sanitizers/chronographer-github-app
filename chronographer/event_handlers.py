@@ -101,7 +101,7 @@ async def on_pr(event):
 
     resp = await gh_api.post(
         check_runs_base_uri,
-        accept='application/vnd.github.antiope-preview+json',
+        preview_api_version='antiope',
         data=to_gh_query(NewCheckRequest(
             head_branch, head_sha,
             name='Timeline protection',
@@ -129,7 +129,7 @@ async def on_pr(event):
     )
     resp = await gh_api.patch(
         check_runs_updates_uri,
-        accept='application/vnd.github.antiope-preview+json',
+        preview_api_version='antiope',
         data=to_gh_query(update_check_req),
     )
 
@@ -176,7 +176,7 @@ async def on_pr(event):
     )
     resp = await gh_api.patch(
         check_runs_updates_uri,
-        accept='application/vnd.github.antiope-preview+json',
+        preview_api_version='antiope',
         data=to_gh_query(update_check_req),
     )
 
