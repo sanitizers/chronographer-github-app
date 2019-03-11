@@ -1,0 +1,16 @@
+{
+  "action": "synchronize",
+  "sender": {"login": "curl"},
+  "number": 2,
+  "installation": {"id": 491111},
+  "repository": {"full_name": "sanitizers/browntruck"},
+  "pull_request": {
+    "number": 2,
+    "head": {
+      "ref": "feature/github-app-aiohttp",
+      "sha": "713a1820272569204d70eb28bfbf997e2a3bd121"
+    },
+    "diff_url":
+    "https://patch-diff.githubusercontent.com/raw/sanitizers/browntruck/pull/2.diff"
+  }
+}

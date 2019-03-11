@@ -1,0 +1,22 @@
+{
+  "check_run": {
+    "conclusion": "",
+    "name": "",
+    "check_suite": {
+      "id": 0,
+      "pull_requests": [
+        {
+          "number": 1,
+          "head": {
+            "ref": "feature/github-app-aiohttp",
+            "sha": "f2114ef"
+          }
+        }
+      ]
+    }
+  },
+  "requested_action": {"identifier": 0},
+  "action": "rerequested",
+  "installation": {"id": 491111},
+  "repository": {"full_name": "sanitizers/browntruck"}
+}
