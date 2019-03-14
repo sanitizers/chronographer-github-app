@@ -10,7 +10,7 @@ LABEL "com.github.actions.icon"="file-text"
 LABEL "com.github.actions.color"="#0076df"
 
 ADD . /usr/src/chronographer
-RUN pip install -r /usr/src/requirements.txt
+RUN pip install -r /usr/src/chronographer/requirements.txt
 
 ENV PYTHONPATH /usr/src/chronographer
 
