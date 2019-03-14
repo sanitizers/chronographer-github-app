@@ -9,8 +9,9 @@ LABEL "com.github.actions.description"="Run a news fragment presence check"
 LABEL "com.github.actions.icon"="file-text"
 LABEL "com.github.actions.color"="#0076df"
 
-ADD . chronographer
-WORKDIR chronographer
-RUN pip install -r requirements.txt
+ADD . /usr/src/chronographer
+RUN pip install -r /usr/src/requirements.txt
+
+ENV PYTHONPATH /usr/src/chronographer
 
 ENTRYPOINT ["python", "-m", "chronographer.action"]
