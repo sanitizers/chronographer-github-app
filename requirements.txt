@@ -1,12 +1,6 @@
 -c constraints.txt
-aiohttp
-cryptography
-environ-config
-envparse
-gidgethub
 gunicorn
+octomachinery
 pre-commit
-pyjwt
 pylint
-setuptools_scm
 unidiff
