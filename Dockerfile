@@ -9,7 +9,7 @@ LABEL "com.github.actions.description"="Run a news fragment presence check"
 LABEL "com.github.actions.icon"="file-text"
 LABEL "com.github.actions.color"="#0076df"
 
-ADD . .
+ADD . chronographer
 WORKDIR chronographer
 RUN pip install -r requirements.txt
 
