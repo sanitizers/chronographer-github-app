@@ -15,6 +15,8 @@ from octomachinery.github.models.checks_api_requests import (
     to_gh_query,
 )
 
+from .file_utils import get_towncrier_config
+
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +107,7 @@ async def on_pr(event):
         data=to_gh_query(NewCheckRequest(
             head_branch, head_sha,
             name='Timeline protection',
+            status='queued',
             started_at=f'{datetime.utcnow().isoformat()}Z',
         )),
     )
@@ -133,9 +136,11 @@ async def on_pr(event):
         data=to_gh_query(update_check_req),
     )
 
+    _tc_fragment_re = await compile_towncrier_fragments_regex(ref=head_sha)
+
     news_fragments_added = [
         f for f in diff
-        if f.is_added_file and _NEWS_FRAGMENT_RE.search(f.path)
+        if f.is_added_file and _tc_fragment_re.search(f.path)
     ]
     logger.info(
         'News fragments are %s',
@@ -164,7 +169,7 @@ async def on_pr(event):
                 '/wp-content/uploads/2014/10/vatican-library.jpg)',
         } if news_fragments_added else {
             'title': f'{update_check_req.name}: History fragments missing',
-            'text': f'No files matching {_NEWS_FRAGMENT_RE} pattern added',
+            'text': f'No files matching {_tc_fragment_re} pattern added',
             'summary':
                 'Oops... This change does not have a record in the '
                 'archives. Just as if it never happened!'
@@ -182,3 +187,22 @@ async def on_pr(event):
 
     logger.info('got %s event', event.event)
     logger.info('gh_api=%s', gh_api)
+
+
+async def compile_towncrier_fragments_regex(ref):
+    """Create fragments check regex based on the towncrier config."""
+    towncrier_conf = await get_towncrier_config(ref=ref)
+    if not towncrier_conf:
+        return _NEWS_FRAGMENT_RE
+
+    return (
+        r'{base_dir}/{file_pattern}'
+        r'(?P<fragment_type>{fragment_types})$'
+    ).format(
+        base_dir=towncrier_conf['directory'].rstrip('/'),
+        file_pattern=r'[^\./]+\.',
+        fragment_types=r'|'.join(
+            change_type['directory']
+            for change_type in towncrier_conf['type']
+        ),
+    )
