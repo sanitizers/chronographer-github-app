@@ -2,6 +2,7 @@
 
 import typing
 
+import gidgethub
 import toml
 
 from octomachinery.app.runtime.installation_utils import (
@@ -14,10 +15,13 @@ async def read_pyproject_toml(
         ref: typing.Optional[str] = None,
 ) -> typing.Mapping[str, typing.Any]:
     """Fetch and parse pyproject.toml contents as dict."""
-    config_content = await read_file_contents_from_repo(
-        file_path='pyproject.toml',
-        ref=ref,
-    )
+    try:
+        config_content = await read_file_contents_from_repo(
+            file_path='pyproject.toml',
+            ref=ref,
+        )
+    except gidgethub.BadRequest:
+        config_content = None
 
     if config_content is None:
         return {}
