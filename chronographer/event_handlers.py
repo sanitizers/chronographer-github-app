@@ -195,14 +195,16 @@ async def compile_towncrier_fragments_regex(ref):
     if not towncrier_conf:
         return _NEWS_FRAGMENT_RE
 
-    return (
-        r'{base_dir}/{file_pattern}'
-        r'(?P<fragment_type>{fragment_types})$'
-    ).format(
-        base_dir=towncrier_conf['directory'].rstrip('/'),
-        file_pattern=r'[^\./]+\.',
-        fragment_types=r'|'.join(
-            change_type['directory']
-            for change_type in towncrier_conf['type']
+    return re.compile(
+        (
+            r'{base_dir}/{file_pattern}'
+            r'(?P<fragment_type>{fragment_types})$'
+        ).format(
+            base_dir=towncrier_conf['directory'].rstrip('/'),
+            file_pattern=r'[^\./]+\.',
+            fragment_types=r'|'.join(
+                change_type['directory']
+                for change_type in towncrier_conf['type']
+            ),
         ),
     )
