@@ -21,12 +21,6 @@ from .file_utils import get_towncrier_config
 logger = logging.getLogger(__name__)
 
 
-_NEWS_FRAGMENT_RE = re.compile(
-    r'news/[^\./]+\.(removal|feature|bugfix|doc|vendor|trivial)$',
-)
-"""Regexp for the valid location of news fragments."""
-
-
 @process_event('ping')
 @process_webhook_payload
 async def on_ping(*, hook, hook_id, zen):
@@ -191,9 +185,17 @@ async def on_pr(event):
 
 async def compile_towncrier_fragments_regex(ref):
     """Create fragments check regex based on the towncrier config."""
-    towncrier_conf = await get_towncrier_config(ref=ref)
-    if not towncrier_conf:
-        return _NEWS_FRAGMENT_RE
+    fallback_base_dir = 'news'
+    fallback_change_types = (
+        'bugfix',
+        'doc',
+        'feature',
+        'removal',
+        'trivial',
+        'vendor',
+    )
+
+    towncrier_conf = await get_towncrier_config(ref=ref) or {}
 
     # Ref:
     # * github.com/hawkowl/towncrier/blob/ecd438c/src/towncrier/_builder.py#L58
@@ -205,11 +207,15 @@ async def compile_towncrier_fragments_regex(ref):
             r'{suffix_pattern}'
             r'$'
         ).format(
-            base_dir=towncrier_conf['directory'].rstrip('/'),
+            base_dir=towncrier_conf.get('directory', '').rstrip('/')
+            or fallback_base_dir,
             file_pattern=r'(?P<issue_number>[^\./]+)\.',  # should we enforce?
             fragment_types=r'|'.join(
                 change_type['directory']
-                for change_type in towncrier_conf['type']
+                for change_type in (
+                    towncrier_conf.get('type', ())
+                    or fallback_change_types
+                )
             ),
             number_pattern=r'(\.\d+)?',  # better be a number
             suffix_pattern=r'(\.[^\./]+)*',  # can we enforce ext per repo?
