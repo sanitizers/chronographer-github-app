@@ -200,18 +200,18 @@ async def compile_towncrier_fragments_regex(ref):
     return re.compile(
         (
             r'{base_dir}/{file_pattern}'
-            r'{number_pattern}'
             r'(?P<fragment_type>{fragment_types})'
+            r'{number_pattern}'
             r'{suffix_pattern}'
             r'$'
         ).format(
             base_dir=towncrier_conf['directory'].rstrip('/'),
             file_pattern=r'(?P<issue_number>[^\./]+)\.',  # should we enforce?
-            number_pattern=r'([^\./]+\.)?',  # better be a number
             fragment_types=r'|'.join(
                 change_type['directory']
                 for change_type in towncrier_conf['type']
             ),
+            number_pattern=r'([^\./]+\.)?',  # better be a number
             suffix_pattern=r'(\.[^\./]+)*',  # can we enforce ext per repo?
         ),
     )
