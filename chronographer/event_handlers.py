@@ -195,16 +195,23 @@ async def compile_towncrier_fragments_regex(ref):
     if not towncrier_conf:
         return _NEWS_FRAGMENT_RE
 
+    # Ref:
+    # * github.com/hawkowl/towncrier/blob/ecd438c/src/towncrier/_builder.py#L58
     return re.compile(
         (
             r'{base_dir}/{file_pattern}'
-            r'(?P<fragment_type>{fragment_types})$'
+            r'{number_pattern}'
+            r'(?P<fragment_type>{fragment_types})'
+            r'{suffix_pattern}'
+            r'$'
         ).format(
             base_dir=towncrier_conf['directory'].rstrip('/'),
-            file_pattern=r'[^\./]+\.',
+            file_pattern=r'(?P<issue_number>[^\./]+)\.',  # should we enforce?
+            number_pattern=r'([^\./]+\.)?',  # better be a number
             fragment_types=r'|'.join(
                 change_type['directory']
                 for change_type in towncrier_conf['type']
             ),
+            suffix_pattern=r'(\.[^\./]+)*',  # can we enforce ext per repo?
         ),
     )
