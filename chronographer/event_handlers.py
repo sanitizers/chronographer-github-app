@@ -211,7 +211,7 @@ async def compile_towncrier_fragments_regex(ref):
                 change_type['directory']
                 for change_type in towncrier_conf['type']
             ),
-            number_pattern=r'([^\./]+\.)?',  # better be a number
+            number_pattern=r'(\.\d+)?',  # better be a number
             suffix_pattern=r'(\.[^\./]+)*',  # can we enforce ext per repo?
         ),
     )
