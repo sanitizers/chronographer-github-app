@@ -196,6 +196,14 @@ async def compile_towncrier_fragments_regex(ref):
     )
 
     towncrier_conf = await get_towncrier_config(ref=ref) or {}
+    base_dir = (
+        towncrier_conf.get('directory', '').rstrip('/')
+        or fallback_base_dir
+    )
+    change_types = (
+        tuple(t['directory'] for t in towncrier_conf.get('type', ()))
+        or fallback_change_types
+    )
 
     # Ref:
     # * github.com/hawkowl/towncrier/blob/ecd438c/src/towncrier/_builder.py#L58
@@ -207,16 +215,9 @@ async def compile_towncrier_fragments_regex(ref):
             r'{suffix_pattern}'
             r'$'
         ).format(
-            base_dir=towncrier_conf.get('directory', '').rstrip('/')
-            or fallback_base_dir,
+            base_dir=base_dir,
             file_pattern=r'(?P<issue_number>[^\./]+)\.',  # should we enforce?
-            fragment_types=r'|'.join(
-                change_type['directory']
-                for change_type in (
-                    towncrier_conf.get('type', ())
-                    or fallback_change_types
-                )
-            ),
+            fragment_types=r'|'.join(change_types),
             number_pattern=r'(\.\d+)?',  # better be a number
             suffix_pattern=r'(\.[^\./]+)*',  # can we enforce ext per repo?
         ),
