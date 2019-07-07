@@ -9,7 +9,8 @@ Your severe chronographer who is watching you record all the news to change note
 2. Change `GITHUB_APP_IDENTIFIER` value and `GITHUB_PRIVATE_KEY` contents
    * You should be able to inline the key using a trick like this:
    ```console
-   echo -n "GITHUB_PRIVATE_KEY='$(cat /path/to/app.date.private-key.pem | sed ':a;N;$!ba;s/\n/\\\\n/g')'" >> .env
+   GITHUB_PRIVATE_KEY_PATH=~/Downloads/your-app-slug.2019-03-24.private-key.pem
+   cat $GITHUB_PRIVATE_KEY_PATH | python3.7 -c 'import sys; inline_private_key=r"\n".join(map(str.strip, sys.stdin.readlines())); print(f"GITHUB_PRIVATE_KEY='"'"'{inline_private_key}'"'"'", end="")' >> .env
    ```
 3. `python3.7 -m chronographer`
 
