@@ -18,3 +18,11 @@ Your severe chronographer who is watching you record all the news to change note
 ```console
 heroku buildpacks:add --index 1 https://github.com/ianpurvis/heroku-buildpack-version.git --app=sanitizers-chronographer-bot
 ```
+
+# Known issues/limitations
+
+* Re-requesting a check run from Checks page in PRs doesn't always work.
+  For a mysterious reason, [sometimes GitHub attaches a list of PRs to the events but sometimes that list is empty 
+  `[complain here]`](
+  https://github.community/t5/GitHub-API-Development-and/BUG-Sometimes-rerequested-check-run-events-don-t-contain-a-PR/m-p/26964/thread-id/2189
+  )
