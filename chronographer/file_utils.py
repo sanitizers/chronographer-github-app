@@ -6,6 +6,7 @@ import gidgethub
 import toml
 
 from octomachinery.app.runtime.installation_utils import (
+    get_installation_config,
     read_file_contents_from_repo,
 )
 
@@ -36,3 +37,12 @@ async def get_towncrier_config(
     """Retrieve towncrier section from pyproject.toml file."""
     pyproject_toml = await read_pyproject_toml(ref=ref)
     return pyproject_toml.get('tool', {}).get('towncrier')
+
+
+async def get_chronographer_config(
+        *,
+        ref: typing.Optional[str] = None,
+) -> typing.Mapping[str, typing.Any]:
+    """Return chronographer config from ``.github/config.yml`` file."""
+    config_json = await get_installation_config(ref=ref)
+    return config_json.get('chronographer', {})

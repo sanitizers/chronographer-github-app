@@ -15,7 +15,10 @@ from octomachinery.github.models.checks_api_requests import (
     to_gh_query,
 )
 
-from .file_utils import get_towncrier_config
+from .file_utils import (
+    get_chronographer_config,
+    get_towncrier_config,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -72,9 +75,11 @@ async def on_install(
 )
 @process_event_actions('check_run', {'rerequested'})
 @process_event_actions('check_suite', {'rerequested'})
+# pylint: disable=too-many-locals
 async def on_pr(event):
     """React to GitHub App pull request webhook event."""
     repo_slug = event.data['repository']['full_name']
+    event_sender = event.data['sender']
     check_runs_base_uri = f'/repos/{repo_slug}/check-runs'
     if event.event == 'pull_request':
         pull_request = event.data['pull_request']
@@ -94,6 +99,14 @@ async def on_pr(event):
     head_sha = pull_request['head']['sha']
 
     gh_api = RUNTIME_CONTEXT.app_installation_client
+
+    repo_config = await get_chronographer_config(ref=head_sha)
+    if is_blacklisted(event_sender, repo_config.get('exclude')):
+        logger.info(
+            'Skipping this event because %s is blacklisted',
+            event_sender['login'],
+        )
+        return  # Don't even post any check runs for now
 
     resp = await gh_api.post(
         check_runs_base_uri,
@@ -222,3 +235,23 @@ async def compile_towncrier_fragments_regex(ref):
             suffix_pattern=r'(\.[^\./]+)*',  # can we enforce ext per repo?
         ),
     )
+
+
+def is_blacklisted(actor, blacklist):
+    """Find out if the given actor is blacklisted."""
+    username = actor['login']
+    blacklist_bots = blacklist.get('bots', False)
+    if blacklist_bots and actor['type'] == 'Bot':
+        try:
+            return username in blacklist_bots
+        except TypeError:
+            return True
+
+    blacklist_humans = blacklist.get('humans', False)
+    if blacklist_humans and actor['type'] == 'User':
+        try:
+            return username in blacklist_humans
+        except TypeError:
+            return True
+
+    return False
