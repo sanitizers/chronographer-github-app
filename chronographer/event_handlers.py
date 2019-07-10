@@ -241,7 +241,7 @@ def is_blacklisted(actor, blacklist):
     """Find out if the given actor is blacklisted."""
     bot_suffix_length = 5
     username = actor['login']
-    blacklist_bots = blacklist.get('bots', False)
+    blacklist_bots = blacklist.get('bots', True)
     if blacklist_bots and actor['type'] == 'Bot':
         username = username[:-bot_suffix_length]  # Strip off ``[bot]`` suffix
         try:
