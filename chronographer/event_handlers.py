@@ -239,9 +239,11 @@ async def compile_towncrier_fragments_regex(ref):
 
 def is_blacklisted(actor, blacklist):
     """Find out if the given actor is blacklisted."""
+    bot_suffix_length = 5
     username = actor['login']
     blacklist_bots = blacklist.get('bots', False)
     if blacklist_bots and actor['type'] == 'Bot':
+        username = username[:-bot_suffix_length]  # Strip off ``[bot]`` suffix
         try:
             return username in blacklist_bots
         except TypeError:
