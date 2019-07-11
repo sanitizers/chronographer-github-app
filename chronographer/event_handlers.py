@@ -175,7 +175,10 @@ async def on_pr(event):
         data=to_gh_query(update_check_req),
     )
 
-    _tc_fragment_re = await compile_towncrier_fragments_regex(ref=head_sha)
+    _tc_fragment_re = await compile_towncrier_fragments_regex(
+        ref=head_sha,
+        name_settings=repo_config.get('enforce_name', {}),
+    )
 
     news_fragments_required = True
     news_fragments_added = [
@@ -235,7 +238,7 @@ async def on_pr(event):
     logger.info('gh_api=%s', gh_api)
 
 
-async def compile_towncrier_fragments_regex(ref):
+async def compile_towncrier_fragments_regex(ref, name_settings):
     """Create fragments check regex based on the towncrier config."""
     fallback_base_dir = 'news'
     fallback_change_types = (
@@ -246,6 +249,9 @@ async def compile_towncrier_fragments_regex(ref):
         'trivial',
         'vendor',
     )
+
+    # e.g. ``.rst``:
+    fragment_filename_suffix = re.escape(name_settings.get('suffix', ''))
 
     towncrier_conf = await get_towncrier_config(ref=ref) or {}
     base_dir = (
@@ -265,13 +271,15 @@ async def compile_towncrier_fragments_regex(ref):
             r'(?P<fragment_type>{fragment_types})'
             r'{number_pattern}'
             r'{suffix_pattern}'
+            r'{postfix_pattern}'
             r'$'
         ).format(
             base_dir=base_dir,
             file_pattern=r'(?P<issue_number>[^\./]+)\.',  # should we enforce?
             fragment_types=r'|'.join(change_types),
             number_pattern=r'(\.\d+)?',  # better be a number
-            suffix_pattern=r'(\.[^\./]+)*',  # can we enforce ext per repo?
+            suffix_pattern=r'(\.[^\./]+)*',
+            postfix_pattern=fragment_filename_suffix,
         ),
     )
 
