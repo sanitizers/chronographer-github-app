@@ -106,7 +106,39 @@ async def on_pr(event):
             'Skipping this event because %s is blacklisted',
             event_sender['login'],
         )
-        return  # Don't even post any check runs for now
+        await gh_api.post(
+            check_runs_base_uri,
+            preview_api_version='antiope',
+            data=to_gh_query(NewCheckRequest(
+                head_branch, head_sha,
+                name='Timeline protection',
+                status='completed',
+                started_at=f'{datetime.utcnow().isoformat()}Z',
+                completed_at=f'{datetime.utcnow().isoformat()}Z',
+                conclusion='neutral',
+                output={
+                    'title': f'Timeline protection: Nothing to do',
+                    'text':
+                        'The author of this change '
+                        f"({event_sender['login']!s}) "
+                        'is ignored because it is excluded '
+                        'via the repository config.',
+                    'summary':
+                        'Heeeeey!'
+                        "We've got an inclusive and welcoming community here."
+                        '\n\n'
+                        'All robots 🤖 are welcome to send PRs, '
+                        'no strings attached! '
+                        'This change does not need to be recorded '
+                        'to our chronicles.'
+                        '\n\n'
+                        '![Helloooo!]('
+                        'https://www.goodfreephotos.com/albums/vector-images'
+                        '/blue-robot-vector-art.png)',
+                },
+            )),
+        )
+        return  # Interrupt the webhook event processing
 
     resp = await gh_api.post(
         check_runs_base_uri,
