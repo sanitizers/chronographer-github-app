@@ -177,6 +177,7 @@ async def on_pr(event):
 
     _tc_fragment_re = await compile_towncrier_fragments_regex(ref=head_sha)
 
+    news_fragments_required = True
     news_fragments_added = [
         f for f in diff
         if f.is_added_file and _tc_fragment_re.search(f.path)
@@ -187,11 +188,17 @@ async def on_pr(event):
         else 'absent',
     )
 
+    if not news_fragments_added and not requires_changelog(
+            (f.path for f in diff),
+            repo_config.get('paths', {}),
+    ):
+        news_fragments_required = False
+
     update_check_req = attr.evolve(
         update_check_req,
         status='completed',
         conclusion=(
-            'success' if news_fragments_added
+            'success' if news_fragments_required and news_fragments_added
             else 'failure'
         ),
         completed_at=f'{datetime.utcnow().isoformat()}Z',
@@ -206,7 +213,7 @@ async def on_pr(event):
                 '![You are good at keeping records!]('
                 'https://theeventchronicle.com'
                 '/wp-content/uploads/2014/10/vatican-library.jpg)',
-        } if news_fragments_added else {
+        } if news_fragments_required else {
             'title': f'{update_check_req.name}: History fragments missing',
             'text': f'No files matching {_tc_fragment_re} pattern added',
             'summary':
@@ -289,3 +296,25 @@ def is_blacklisted(actor, blacklist):
             return True
 
     return False
+
+
+def requires_changelog(file_paths, config_paths):
+    """Check whether a changelog fragment is needed for the changes."""
+    include_paths = config_paths.get('include', [])
+    exclude_paths = config_paths.get('exclude', [])
+
+    paths_gen = (p for p in file_paths)
+
+    if include_paths:
+        paths_gen = (
+            p for p in paths_gen
+            if any(p.startswith(i) for i in include_paths)
+        )
+
+    if exclude_paths:
+        paths_gen = (
+            p for p in paths_gen
+            if not any(p.startswith(e) for e in exclude_paths)
+        )
+
+    return bool(len(paths_gen))
