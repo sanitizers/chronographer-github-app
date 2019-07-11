@@ -101,7 +101,7 @@ async def on_pr(event):
     gh_api = RUNTIME_CONTEXT.app_installation_client
 
     repo_config = await get_chronographer_config(ref=head_sha)
-    if is_blacklisted(event_sender, repo_config.get('exclude')):
+    if is_blacklisted(event_sender, repo_config.get('exclude', {})):
         logger.info(
             'Skipping this event because %s is blacklisted',
             event_sender['login'],
