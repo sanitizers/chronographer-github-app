@@ -325,4 +325,4 @@ def requires_changelog(file_paths, config_paths):
             if not any(p.startswith(e) for e in exclude_paths)
         )
 
-    return bool(len(paths_gen))
+    return next(paths_gen, False) is not False
