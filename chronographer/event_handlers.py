@@ -19,6 +19,9 @@ from .file_utils import (
     get_chronographer_config,
     get_towncrier_config,
 )
+from .labels import (
+    LABEL_PROVIDED,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -190,6 +193,18 @@ async def on_pr(event):
         'present' if news_fragments_added
         else 'absent',
     )
+
+    if news_fragments_added:
+        labels_url = f'{pull_request["issue_url"]}/labels'
+        await gh_api.post(
+            labels_url,
+            preview_api_version='symmetra',
+            data={
+                'labels': [
+                    LABEL_PROVIDED,
+                ],
+            },
+        )
 
     if not news_fragments_added and not requires_changelog(
             (f.path for f in diff),
