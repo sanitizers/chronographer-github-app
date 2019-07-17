@@ -212,13 +212,12 @@ async def on_pr(event):
     ):
         news_fragments_required = False
 
+    report_success = news_fragments_required and news_fragments_added
+
     update_check_req = attr.evolve(
         update_check_req,
         status='completed',
-        conclusion=(
-            'success' if news_fragments_required and news_fragments_added
-            else 'failure'
-        ),
+        conclusion='success' if report_success else 'failure',
         completed_at=f'{datetime.utcnow().isoformat()}Z',
         output={
             'title': f'{update_check_req.name}: Good to go',
@@ -231,7 +230,7 @@ async def on_pr(event):
                 '![You are good at keeping records!]('
                 'https://theeventchronicle.com'
                 '/wp-content/uploads/2014/10/vatican-library.jpg)',
-        } if news_fragments_required else {
+        } if report_success else {
             'title': f'{update_check_req.name}: History fragments missing',
             'text': f'No files matching {_tc_fragment_re} pattern added',
             'summary':
