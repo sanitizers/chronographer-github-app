@@ -10,7 +10,9 @@
           "head": {
             "ref": "feature/github-app-aiohttp",
             "sha": "f2114ef"
-          }
+          },
+          "issue_url":
+          "https://api.github.com/repos/sanitizers/browntruck/issues/1"
         }
       ]
     }
@@ -18,5 +20,9 @@
   "requested_action": {"identifier": 0},
   "action": "rerequested",
   "installation": {"id": 491111},
-  "repository": {"full_name": "sanitizers/browntruck"}
+  "repository": {"full_name": "sanitizers/browntruck"},
+  "sender": {
+      "login": "test_bot",
+      "type": "Bot"
+  }
 }

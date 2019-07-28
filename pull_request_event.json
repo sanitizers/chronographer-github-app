@@ -11,6 +11,12 @@
       "sha": "713a1820272569204d70eb28bfbf997e2a3bd121"
     },
     "diff_url":
-    "https://patch-diff.githubusercontent.com/raw/sanitizers/browntruck/pull/2.diff"
+    "https://patch-diff.githubusercontent.com/raw/sanitizers/browntruck/pull/2.diff",
+    "issue_url":
+    "https://api.github.com/repos/sanitizers/browntruck/issues/2"
+  },
+  "sender": {
+      "login": "test_bot",
+      "type": "User"
   }
 }
