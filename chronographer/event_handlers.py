@@ -82,7 +82,6 @@ async def on_install(
 async def on_pr(event):
     """React to GitHub App pull request webhook event."""
     repo_slug = event.data['repository']['full_name']
-    event_sender = event.data['sender']
     check_runs_base_uri = f'/repos/{repo_slug}/check-runs'
     if event.event == 'pull_request':
         pull_request = event.data['pull_request']
@@ -94,6 +93,7 @@ async def on_pr(event):
         pull_request = (
             event.data['check_suite']['pull_requests'][0]
         )
+    pr_author = pull_request['user']
     diff_url = (
         f'https://github.com/{repo_slug}'
         f'/pull/{pull_request["number"]:d}.diff'
@@ -104,10 +104,10 @@ async def on_pr(event):
     gh_api = RUNTIME_CONTEXT.app_installation_client
 
     repo_config = await get_chronographer_config(ref=head_sha)
-    if is_blacklisted(event_sender, repo_config.get('exclude', {})):
+    if is_blacklisted(pr_author, repo_config.get('exclude', {})):
         logger.info(
             'Skipping this event because %s is blacklisted',
-            event_sender['login'],
+            pr_author['login'],
         )
         await gh_api.post(
             check_runs_base_uri,
@@ -123,7 +123,7 @@ async def on_pr(event):
                     'title': f'Timeline protection: Nothing to do',
                     'text':
                         'The author of this change '
-                        f"({event_sender['login']!s}) "
+                        f"({pr_author['login']!s}) "
                         'is ignored because it is excluded '
                         'via the repository config.',
                     'summary':
