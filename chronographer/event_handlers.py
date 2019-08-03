@@ -237,7 +237,9 @@ async def on_pr(event):
             'title': f'{update_check_req.name}: Good to go',
             'text':
                 'The following news fragments found: '
-                f'{news_fragments_added!r}',
+                f'{news_fragments_added!r}'
+                '\n\n'
+                f'Pattern: {_tc_fragment_re}',
             'summary':
                 'Great! This change has been recorded to the chronicles'
                 '\n\n'
