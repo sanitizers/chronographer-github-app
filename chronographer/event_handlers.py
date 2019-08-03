@@ -23,6 +23,20 @@ from .labels import (
     LABEL_PROVIDED,
 )
 
+try:
+    from towncrier._settings import _default_types as _towncrier_default_types
+    FALLBACK_CHANGE_TYPES = tuple(_towncrier_default_types)
+except ImportError:
+    FALLBACK_CHANGE_TYPES = (
+        'bugfix',
+        'doc',
+        'feature',
+        'misc',
+        'removal',
+        'trivial',
+        'vendor',
+    )
+
 
 logger = logging.getLogger(__name__)
 
@@ -255,14 +269,6 @@ async def on_pr(event):
 async def compile_towncrier_fragments_regex(ref, name_settings):
     """Create fragments check regex based on the towncrier config."""
     fallback_base_dir = 'news'
-    fallback_change_types = (
-        'bugfix',
-        'doc',
-        'feature',
-        'removal',
-        'trivial',
-        'vendor',
-    )
 
     # e.g. ``.rst``:
     fragment_filename_suffix = re.escape(name_settings.get('suffix', ''))
@@ -274,7 +280,7 @@ async def compile_towncrier_fragments_regex(ref, name_settings):
     )
     change_types = (
         tuple(t['directory'] for t in towncrier_conf.get('type', ()))
-        or fallback_change_types
+        or FALLBACK_CHANGE_TYPES
     )
 
     # Ref:
