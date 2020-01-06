@@ -12,7 +12,11 @@
             "sha": "f2114ef"
           },
           "issue_url":
-          "https://api.github.com/repos/sanitizers/browntruck/issues/1"
+          "https://api.github.com/repos/sanitizers/browntruck/issues/1",
+          "user": {
+            "login": "test_bot",
+            "type": "User"
+          }
         }
       ]
     }

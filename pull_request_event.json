@@ -13,10 +13,14 @@
     "diff_url":
     "https://patch-diff.githubusercontent.com/raw/sanitizers/browntruck/pull/2.diff",
     "issue_url":
-    "https://api.github.com/repos/sanitizers/browntruck/issues/2"
+    "https://api.github.com/repos/sanitizers/browntruck/issues/2",
+    "user": {
+      "login": "test_bot",
+      "type": "User"
+    }
   },
   "sender": {
       "login": "test_bot",
-      "type": "User"
+      "type": "Bot"
   }
 }
