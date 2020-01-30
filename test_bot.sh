@@ -12,7 +12,7 @@ do
     >&2 echo Testing "${event}"...
     curl \
       -H "X-GitHub-Event:${event}" \
-      -H "X-GitHub-Delivery:cxxx-${event}-delivery" \
+      -H "X-GitHub-Delivery:$(uuidgen -r)" \
       -H 'Content-Type:application/json' \
       --data "@${GITHUB_EVENT_PATH}" \
       "${GITHUB_APP_WEBHOOKS_URL}"
