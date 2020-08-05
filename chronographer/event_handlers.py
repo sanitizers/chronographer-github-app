@@ -134,7 +134,7 @@ async def on_pr(event):
                 completed_at=f'{datetime.utcnow().isoformat()}Z',
                 conclusion='neutral',
                 output={
-                    'title': f'Timeline protection: Nothing to do',
+                    'title': 'Timeline protection: Nothing to do',
                     'text':
                         'The author of this change '
                         f"({pr_author['login']!s}) "
