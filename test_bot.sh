@@ -10,6 +10,7 @@ for event in ping security_advisory pull_request check_run
 do
     GITHUB_EVENT_PATH="`pwd`/${event}_event.json"
     >&2 echo Testing "${event}"...
+      #-H "X-Hub-Signature:$(uuidgen -r)" \
     curl \
       -H "X-GitHub-Event:${event}" \
       -H "X-GitHub-Delivery:$(uuidgen -r)" \

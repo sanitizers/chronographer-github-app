@@ -41,6 +41,22 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+import asyncio
+
+@process_event('ping')
+@process_webhook_payload
+async def on_ping0(*, hook, hook_id, zen):
+    await asyncio.sleep(1)
+    print('ping0')
+
+
+@process_event('ping')
+@process_webhook_payload
+async def on_ping1(*, hook, hook_id, zen):
+    await asyncio.sleep(3)
+    print('ping1')
+
+
 @process_event('ping')
 @process_webhook_payload
 async def on_ping(*, hook, hook_id, zen):
@@ -95,17 +111,17 @@ async def on_install(
 # pylint: disable=too-many-locals
 async def on_pr(event):
     """React to GitHub App pull request webhook event."""
-    repo_slug = event.data['repository']['full_name']
+    repo_slug = event.payload['repository']['full_name']
     check_runs_base_uri = f'/repos/{repo_slug}/check-runs'
-    if event.event == 'pull_request':
-        pull_request = event.data['pull_request']
-    elif event.event == 'check_run':
+    if event.name == 'pull_request':
+        pull_request = event.payload['pull_request']
+    elif event.name == 'check_run':
         pull_request = (
-            event.data['check_run']['check_suite']['pull_requests'][0]
+            event.payload['check_run']['check_suite']['pull_requests'][0]
         )
-    elif event.event == 'check_suite':
+    elif event.name == 'check_suite':
         pull_request = (
-            event.data['check_suite']['pull_requests'][0]
+            event.payload['check_suite']['pull_requests'][0]
         )
     pr_author = pull_request['user']
     diff_url = (
@@ -114,6 +130,7 @@ async def on_pr(event):
     )
     head_branch = pull_request['head']['ref']
     head_sha = pull_request['head']['sha']
+    # head_sha = pull_request['merge_commit_sha']
 
     gh_api = RUNTIME_CONTEXT.app_installation_client
 
@@ -264,7 +281,7 @@ async def on_pr(event):
         data=to_gh_query(update_check_req),
     )
 
-    logger.info('got %s event', event.event)
+    logger.info('got %s event', event.name)
     logger.info('gh_api=%s', gh_api)
 
 

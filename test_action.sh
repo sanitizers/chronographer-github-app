@@ -9,6 +9,7 @@ GITHUB_ACTION_PYTHON_MODULE=chronographer.action
 for event in ping pull_request check_run
 do
     >&2 echo Testing "${event}"...
+    GITHUB_TOKEN="$(uuidgen)" \
     GITHUB_EVENT_NAME="${event}" \
     GITHUB_EVENT_PATH="`pwd`/${event}_event.json" \
     python -m "${GITHUB_ACTION_PYTHON_MODULE}"
