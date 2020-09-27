@@ -244,9 +244,9 @@ nodeenv==1.5.0 \
     --hash=sha256:5304d424c529c997bc888453aeaa6362d242b6b4631e90f3d4bf1b290f1c84a9 \
     --hash=sha256:ab45090ae383b716c4ef89e690c41ff8c2b257b85b309f01f3654df3d084bd7c \
     # via pre-commit
-octomachinery==0.3.0 \
-    --hash=sha256:7d4bbc16beefecdc0fa5cb46ad21120aae503417192f631cb8098f99a69f1026 \
-    --hash=sha256:e4bec4e49873266837e84ac11f0db3859ab2480af0a4c38daf992ac9008d8efa \
+octomachinery==0.3.1 \
+    --hash=sha256:042f1b3bf650842654f09927d4adaacc5ab309a48749c5e5aacf832db4d98529 \
+    --hash=sha256:486abdb516443d0eefbe20bfb1d53ea41edea1dc89322b49ce95478b378f7142 \
     # via -r requirements.in
 pre-commit==2.7.1 \
     --hash=sha256:810aef2a2ba4f31eed1941fc270e72696a1ad5590b9751839c90807d0fff6b9a \
