@@ -43,6 +43,17 @@ async def get_chronographer_config(
         *,
         ref: typing.Optional[str] = None,
 ) -> typing.Mapping[str, typing.Any]:
-    """Return chronographer config from ``.github/config.yml`` file."""
+    """Return chronographer config ``.github/chronographer.yml`` object.
+
+    If the file is not there, fall back to ``.github/config.yml``
+    """
+    try:
+        return await get_installation_config(
+            config_name='chronographer.yml',
+            ref=ref,
+        )
+    except gidgethub.BadRequest:
+        pass
+
     config_json = await get_installation_config(ref=ref)
     return config_json.get('chronographer', {})
