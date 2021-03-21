@@ -16,35 +16,37 @@ aiohttp==3.6.2 \
     --hash=sha256:6206a135d072f88da3e71cc501c59d5abffa9d0bb43269a6dcd28d66bfafdbdd \
     --hash=sha256:65f31b622af739a802ca6fd1a3076fd0ae523f8485c52924a89561ba10c49b48 \
     --hash=sha256:ae55bac364c405caa23a4f2d6cfecc6a0daada500274ffca4a9230e7129eac59 \
-    --hash=sha256:b778ce0c909a2653741cb4b1ac7015b5c130ab9c897611df43ae6a58523cb965 \
+    --hash=sha256:b778ce0c909a2653741cb4b1ac7015b5c130ab9c897611df43ae6a58523cb965
     # via octomachinery
 anyio==1.4.0 \
     --hash=sha256:95f60964fc4583f3f226f8dc275dfb02aefe7b39b85a999c6d14f4ec5323c1d8 \
-    --hash=sha256:9ee67e8131853f42957e214d4531cee6f2b66dda164a298d9686a768b7161a4f \
+    --hash=sha256:9ee67e8131853f42957e214d4531cee6f2b66dda164a298d9686a768b7161a4f
     # via octomachinery
 appdirs==1.4.4 \
     --hash=sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41 \
-    --hash=sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128 \
+    --hash=sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128
     # via virtualenv
 astroid==2.4.2 \
     --hash=sha256:2f4078c2a41bf377eea06d71c9d2ba4eb8f6b1af2135bec27bbbb7d8f12bb703 \
-    --hash=sha256:bc58d83eb610252fd8de6363e39d4f1d0619c894b0ed24603b881c02e64c7386 \
+    --hash=sha256:bc58d83eb610252fd8de6363e39d4f1d0619c894b0ed24603b881c02e64c7386
     # via pylint
 async-generator==1.10 \
     --hash=sha256:01c7bf666359b4967d2cda0000cc2e4af16a0ae098cbffcb8472fb9e8ad6585b \
-    --hash=sha256:6ebb3d106c12920aaae42ccb6f787ef5eefdcdd166ea3d628fa8476abe712144 \
+    --hash=sha256:6ebb3d106c12920aaae42ccb6f787ef5eefdcdd166ea3d628fa8476abe712144
     # via anyio
 async-timeout==3.0.1 \
     --hash=sha256:0c3c816a028d47f659d6ff5c745cb2acf1f966da1fe5c19c77a70282b25f4c5f \
-    --hash=sha256:4291ca197d287d274d0b6cb5d6f8f8f82d434ed288f962539ff18cc9012f9ea3 \
+    --hash=sha256:4291ca197d287d274d0b6cb5d6f8f8f82d434ed288f962539ff18cc9012f9ea3
     # via aiohttp
 attrs==20.2.0 \
     --hash=sha256:26b54ddbbb9ee1d34d5d3668dd37d6cf74990ab23c828c2888dccdceee395594 \
-    --hash=sha256:fce7fc47dfc976152e82d53ff92fa0407700c21acd20886a13777a0d20e655dc \
-    # via aiohttp, environ-config
+    --hash=sha256:fce7fc47dfc976152e82d53ff92fa0407700c21acd20886a13777a0d20e655dc
+    # via
+    #   aiohttp
+    #   environ-config
 certifi==2020.6.20 \
     --hash=sha256:5930595817496dd21bb8dc35dad090f1c2cd0adfaf21204bf6732ca5d8ee34d3 \
-    --hash=sha256:8fc0819f1f30ba15bdb34cceffb9ef04d99f420f68eb75d901e9560b8749fc41 \
+    --hash=sha256:8fc0819f1f30ba15bdb34cceffb9ef04d99f420f68eb75d901e9560b8749fc41
     # via sentry-sdk
 cffi==1.14.2 \
     --hash=sha256:0da50dcbccd7cb7e6c741ab7912b2eff48e85af217d72b57f80ebc616257125e \
@@ -74,20 +76,22 @@ cffi==1.14.2 \
     --hash=sha256:e4082d832e36e7f9b2278bc774886ca8207346b99f278e54c9de4834f17232f7 \
     --hash=sha256:e4b9b7af398c32e408c00eb4e0d33ced2f9121fd9fb978e6c1b57edd014a7d15 \
     --hash=sha256:e613514a82539fc48291d01933951a13ae93b6b444a88782480be32245ed4afa \
-    --hash=sha256:f5033952def24172e60493b68717792e3aebb387a8d186c43c020d9363ee7281 \
+    --hash=sha256:f5033952def24172e60493b68717792e3aebb387a8d186c43c020d9363ee7281
     # via cryptography
 cfgv==3.2.0 \
     --hash=sha256:32e43d604bbe7896fe7c248a9c2276447dbef840feb28fe20494f62af110211d \
-    --hash=sha256:cf22deb93d4bcf92f345a5c3cd39d3d41d6340adc60c78bbbd6588c384fda6a1 \
+    --hash=sha256:cf22deb93d4bcf92f345a5c3cd39d3d41d6340adc60c78bbbd6588c384fda6a1
     # via pre-commit
 chardet==3.0.4 \
     --hash=sha256:84ab92ed1c4d4f16916e05906b6b75a6c0fb5db821cc65e70cbd64a3e2a5eaae \
-    --hash=sha256:fc323ffcaeaed0e0a02bf4d117757b98aed530d9ed4531e3e15460124c106691 \
+    --hash=sha256:fc323ffcaeaed0e0a02bf4d117757b98aed530d9ed4531e3e15460124c106691
     # via aiohttp
 click==7.1.2 \
     --hash=sha256:d2b5255c7c6349bc1bd1e59e08cd12acbbd63ce649f2588755783aa94dfb6b1a \
-    --hash=sha256:dacca89f4bfadd5de3d7489b7c8a566eee0d3676333fbb50030263894c38c0dc \
-    # via octomachinery, towncrier
+    --hash=sha256:dacca89f4bfadd5de3d7489b7c8a566eee0d3676333fbb50030263894c38c0dc
+    # via
+    #   octomachinery
+    #   towncrier
 cryptography==3.1 \
     --hash=sha256:10c9775a3f31610cf6b694d1fe598f2183441de81cedcf1814451ae53d71b13a \
     --hash=sha256:180c9f855a8ea280e72a5d61cf05681b230c2dce804c48e9b2983f491ecc44ed \
@@ -110,50 +114,54 @@ cryptography==3.1 \
     --hash=sha256:e7563eb7bc5c7e75a213281715155248cceba88b11cb4b22957ad45b85903761 \
     --hash=sha256:e7dad66a9e5684a40f270bd4aee1906878193ae50a4831922e454a2a457f1716 \
     --hash=sha256:eb80a288e3cfc08f679f95da72d2ef90cb74f6d8a8ba69d2f215c5e110b2ca32 \
-    --hash=sha256:fa7fbcc40e2210aca26c7ac8a39467eae444d90a2c346cbcffd9133a166bcc67 \
-    # via octomachinery, pyjwt
+    --hash=sha256:fa7fbcc40e2210aca26c7ac8a39467eae444d90a2c346cbcffd9133a166bcc67
+    # via
+    #   octomachinery
+    #   pyjwt
 distlib==0.3.1 \
     --hash=sha256:8c09de2c67b3e7deef7184574fc060ab8a793e7adbb183d942c389c8b13c52fb \
-    --hash=sha256:edf6116872c863e1aa9d5bb7cb5e05a022c519a4594dc703843343a9ddd9bff1 \
+    --hash=sha256:edf6116872c863e1aa9d5bb7cb5e05a022c519a4594dc703843343a9ddd9bff1
     # via virtualenv
 environ-config==20.1.0 \
     --hash=sha256:0e300307520c1e6a5424018b7f70246a2c7f4cb5cc5cbbebccc6a982eb1767cb \
-    --hash=sha256:3167feda073bd3cd3457a3e5fa7c2836b6574c046cd0dcd79385ce3284e837bd \
+    --hash=sha256:3167feda073bd3cd3457a3e5fa7c2836b6574c046cd0dcd79385ce3284e837bd
     # via octomachinery
 envparse==0.2.0 \
-    --hash=sha256:4f3b9a27bb55d27f124eb4adf006fec05e4588891c9a054a183a112645056eb7 \
+    --hash=sha256:4f3b9a27bb55d27f124eb4adf006fec05e4588891c9a054a183a112645056eb7
     # via octomachinery
 filelock==3.0.12 \
     --hash=sha256:18d82244ee114f543149c66a6e0c14e9c4f8a1044b5cdaadd0f82159d6a6ff59 \
-    --hash=sha256:929b7d63ec5b7d6b71b0fa5ac14e030b3f70b75747cef1b10da9b879fef15836 \
+    --hash=sha256:929b7d63ec5b7d6b71b0fa5ac14e030b3f70b75747cef1b10da9b879fef15836
     # via virtualenv
 gidgethub==4.1.1 \
     --hash=sha256:cfabfa696d422ee91eaf1e3f01ea75e576721233cc3ea8badc7d86c30061df8e \
-    --hash=sha256:fab527a36fd89a27f68686f4c726b2efd989c3d2cac1c46149b1dd46c4e3ab7d \
+    --hash=sha256:fab527a36fd89a27f68686f4c726b2efd989c3d2cac1c46149b1dd46c4e3ab7d
     # via octomachinery
 gunicorn==20.0.4 \
     --hash=sha256:1904bb2b8a43658807108d59c3f3d56c2b6121a701161de0ddf9ad140073c626 \
-    --hash=sha256:cd4a810dd51bf497552cf3f863b575dabd73d6ad6a91075b65936b151cbf4f9c \
+    --hash=sha256:cd4a810dd51bf497552cf3f863b575dabd73d6ad6a91075b65936b151cbf4f9c
     # via -r requirements.in
 identify==1.5.3 \
     --hash=sha256:c770074ae1f19e08aadbda1c886bc6d0cb55ffdc503a8c0fe8699af2fc9664ae \
-    --hash=sha256:d02d004568c5a01261839a05e91705e3e9f5c57a3551648f9b3fb2b9c62c0f62 \
+    --hash=sha256:d02d004568c5a01261839a05e91705e3e9f5c57a3551648f9b3fb2b9c62c0f62
     # via pre-commit
 idna==2.10 \
     --hash=sha256:b307872f855b18632ce0c21c5e45be78c0ea7ae4c15c828c20788b26921eb3f6 \
-    --hash=sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0 \
-    # via anyio, yarl
+    --hash=sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0
+    # via
+    #   anyio
+    #   yarl
 incremental==17.5.0 \
     --hash=sha256:717e12246dddf231a349175f48d74d93e2897244939173b01974ab6661406b9f \
-    --hash=sha256:7b751696aaf36eebfab537e458929e194460051ccad279c72b755a167eebd4b3 \
+    --hash=sha256:7b751696aaf36eebfab537e458929e194460051ccad279c72b755a167eebd4b3
     # via towncrier
 isort==5.5.3 \
     --hash=sha256:6187a9f1ce8784cbc6d1b88790a43e6083a6302f03e9ae482acc0f232a98c843 \
-    --hash=sha256:c16eaa7432a1c004c585d79b12ad080c6c421dd18fe27982ca11f95e6898e432 \
+    --hash=sha256:c16eaa7432a1c004c585d79b12ad080c6c421dd18fe27982ca11f95e6898e432
     # via pylint
-jinja2==2.11.2 \
-    --hash=sha256:89aab215427ef59c34ad58735269eb58b1a5808103067f7bb9d5836c651b3bb0 \
-    --hash=sha256:f0a4641d3cf955324a89c04f3d94663aa4d638abe8f733ecd3582848e1c37035 \
+jinja2==2.11.3 \
+    --hash=sha256:03e47ad063331dd6a3f04a43eddca8a966a26ba0c5b7207a9a9e4e08f1b29419 \
+    --hash=sha256:a6d58433de0ae800347cab1fa3043cebbabe8baa9d29e668f1c768cb87a333c6
     # via towncrier
 lazy-object-proxy==1.4.3 \
     --hash=sha256:0c4b206227a8097f05c4dbdd323c50edf81f15db3b8dc064d08c62d37e1a504d \
@@ -176,7 +184,7 @@ lazy-object-proxy==1.4.3 \
     --hash=sha256:d945239a5639b3ff35b70a88c5f2f491913eb94871780ebfabb2568bd58afc5a \
     --hash=sha256:eba7011090323c1dadf18b3b689845fd96a61ba0a1dfbd7f24b921398affc357 \
     --hash=sha256:efa1909120ce98bbb3777e8b6f92237f5d5c8ea6758efea36a473e1d38f7d3e4 \
-    --hash=sha256:f3900e8a5de27447acbf900b4750b0ddfd7ec1ea7fbaf11dfa911141bc522af0 \
+    --hash=sha256:f3900e8a5de27447acbf900b4750b0ddfd7ec1ea7fbaf11dfa911141bc522af0
     # via astroid
 markupsafe==1.1.1 \
     --hash=sha256:00bc623926325b26bb9605ae9eae8a215691f33cae5df11ca5424f06f2d1f473 \
@@ -211,11 +219,11 @@ markupsafe==1.1.1 \
     --hash=sha256:cd5df75523866410809ca100dc9681e301e3c27567cf498077e8551b6d20e42f \
     --hash=sha256:cdb132fc825c38e1aeec2c8aa9338310d29d337bebbd7baa06889d09a60a1fa2 \
     --hash=sha256:e249096428b3ae81b08327a63a485ad0878de3fb939049038579ac0ef61e17e7 \
-    --hash=sha256:e8313f01ba26fbbe36c7be1966a7b7424942f670f38e666995b88d012765b9be \
+    --hash=sha256:e8313f01ba26fbbe36c7be1966a7b7424942f670f38e666995b88d012765b9be
     # via jinja2
 mccabe==0.6.1 \
     --hash=sha256:ab8a6258860da4b6677da4bd2fe5dc2c659cff31b3ee4f7f5d64e79735b80d42 \
-    --hash=sha256:dd8d182285a0fe56bace7f45b5e7d1a6ebcbf524e8f3bd87eb0f125271b8831f \
+    --hash=sha256:dd8d182285a0fe56bace7f45b5e7d1a6ebcbf524e8f3bd87eb0f125271b8831f
     # via pylint
 multidict==4.7.6 \
     --hash=sha256:1ece5a3369835c20ed57adadc663400b5525904e53bae59ec854a5d36b39b21a \
@@ -234,31 +242,35 @@ multidict==4.7.6 \
     --hash=sha256:f07acae137b71af3bb548bd8da720956a3bc9f9a0b87733e0899226a2317aeb7 \
     --hash=sha256:fbb77a75e529021e7c4a8d4e823d88ef4d23674a202be4f5addffc72cbb91430 \
     --hash=sha256:fcfbb44c59af3f8ea984de67ec7c306f618a3ec771c2843804069917a8f2e255 \
-    --hash=sha256:feed85993dbdb1dbc29102f50bca65bdc68f2c0c8d352468c25b54874f23c39d \
-    # via aiohttp, yarl
+    --hash=sha256:feed85993dbdb1dbc29102f50bca65bdc68f2c0c8d352468c25b54874f23c39d
+    # via
+    #   aiohttp
+    #   yarl
 nodeenv==1.5.0 \
     --hash=sha256:5304d424c529c997bc888453aeaa6362d242b6b4631e90f3d4bf1b290f1c84a9 \
-    --hash=sha256:ab45090ae383b716c4ef89e690c41ff8c2b257b85b309f01f3654df3d084bd7c \
+    --hash=sha256:ab45090ae383b716c4ef89e690c41ff8c2b257b85b309f01f3654df3d084bd7c
     # via pre-commit
 octomachinery==0.3.4 \
-    --hash=sha256:9b9f7affeff16249895ba08b70d775ba72edf42d16f0eef79896b6f2dc5b261b \
     --hash=sha256:91f29d7b4eadc4b540750a8f1971545a5fdab604fc33540e7c5f7b7dda8f9098 \
+    --hash=sha256:9b9f7affeff16249895ba08b70d775ba72edf42d16f0eef79896b6f2dc5b261b
     # via -r requirements.in
 pre-commit==2.7.1 \
     --hash=sha256:810aef2a2ba4f31eed1941fc270e72696a1ad5590b9751839c90807d0fff6b9a \
-    --hash=sha256:c54fd3e574565fe128ecc5e7d2f91279772ddb03f8729645fa812fe809084a70 \
+    --hash=sha256:c54fd3e574565fe128ecc5e7d2f91279772ddb03f8729645fa812fe809084a70
     # via -r requirements.in
 pycparser==2.20 \
     --hash=sha256:2d475327684562c3a96cc71adf7dc8c4f0565175cf86b6d7a404ff4c771f15f0 \
-    --hash=sha256:7582ad22678f0fcd81102833f60ef8d0e57288b6b5fb00323d101be910e35705 \
+    --hash=sha256:7582ad22678f0fcd81102833f60ef8d0e57288b6b5fb00323d101be910e35705
     # via cffi
 pyjwt[crypto]==1.7.1 \
     --hash=sha256:5c6eca3c2940464d106b99ba83b00c6add741c9becaec087fb7ccdefea71350e \
-    --hash=sha256:8d59a976fb773f3e6a39c85636357c4f0e242707394cadadd9814f5cbaa20e96 \
-    # via gidgethub, octomachinery
+    --hash=sha256:8d59a976fb773f3e6a39c85636357c4f0e242707394cadadd9814f5cbaa20e96
+    # via
+    #   gidgethub
+    #   octomachinery
 pylint==2.6.0 \
     --hash=sha256:bb4a908c9dadbc3aac18860550e870f58e1a02c9f2c204fdf5693d73be061210 \
-    --hash=sha256:bfe68f020f8a0fece830a22dd4d5dddb4ecc6137db04face4c3420a46a52239f \
+    --hash=sha256:bfe68f020f8a0fece830a22dd4d5dddb4ecc6137db04face4c3420a46a52239f
     # via -r requirements.in
 pyyaml==5.3.1 \
     --hash=sha256:06a0d7ba600ce0b2d2fe2e78453a470b5a6e000a985dd4a4e54e436cc36b0e97 \
@@ -271,50 +283,58 @@ pyyaml==5.3.1 \
     --hash=sha256:95f71d2af0ff4227885f7a6605c37fd53d3a106fcab511b8860ecca9fcf400ee \
     --hash=sha256:b8eac752c5e14d3eca0e6dd9199cd627518cb5ec06add0de9d32baeee6fe645d \
     --hash=sha256:cc8955cfbfc7a115fa81d85284ee61147059a753344bc51098f3ccd69b0d7e0c \
-    --hash=sha256:d13155f591e6fcc1ec3b30685d50bf0711574e2c0dfffd7644babf8b5102ca1a \
-    # via octomachinery, pre-commit
+    --hash=sha256:d13155f591e6fcc1ec3b30685d50bf0711574e2c0dfffd7644babf8b5102ca1a
+    # via
+    #   octomachinery
+    #   pre-commit
 sentry-sdk==0.17.6 \
     --hash=sha256:1a086486ff9da15791f294f6e9915eb3747d161ef64dee2d038a4d0b4a369b24 \
-    --hash=sha256:45486deb031cea6bbb25a540d7adb4dd48cd8a1cc31e6a5ce9fb4f792a572e9a \
+    --hash=sha256:45486deb031cea6bbb25a540d7adb4dd48cd8a1cc31e6a5ce9fb4f792a572e9a
     # via octomachinery
 setuptools-scm==4.1.2 \
     --hash=sha256:69258e2eeba5f7ce1ed7a5f109519580fa3578250f8e4d6684859f86d1b15826 \
-    --hash=sha256:a8994582e716ec690f33fec70cca0f85bd23ec974e3f783233e4879090a7faa8 \
+    --hash=sha256:a8994582e716ec690f33fec70cca0f85bd23ec974e3f783233e4879090a7faa8
     # via octomachinery
 six==1.15.0 \
     --hash=sha256:30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259 \
-    --hash=sha256:8b74bedcbbbaca38ff6d7491d76f2b06b3592611af620f8426e82dddb04a5ced \
-    # via astroid, cryptography, virtualenv
+    --hash=sha256:8b74bedcbbbaca38ff6d7491d76f2b06b3592611af620f8426e82dddb04a5ced
+    # via
+    #   astroid
+    #   cryptography
+    #   virtualenv
 sniffio==1.1.0 \
     --hash=sha256:20ed6d5b46f8ae136d00b9dcb807615d83ed82ceea6b2058cecb696765246da5 \
-    --hash=sha256:8e3810100f69fe0edd463d02ad407112542a11ffdc29f67db2bf3771afb87a21 \
+    --hash=sha256:8e3810100f69fe0edd463d02ad407112542a11ffdc29f67db2bf3771afb87a21
     # via anyio
 toml==0.10.1 \
     --hash=sha256:926b612be1e5ce0634a2ca03470f95169cf16f939018233a670519cb4ac58b0f \
-    --hash=sha256:bda89d5935c2eac546d648028b9901107a595863cb36bae0c73ac804a9b4ce88 \
-    # via pre-commit, pylint, towncrier
+    --hash=sha256:bda89d5935c2eac546d648028b9901107a595863cb36bae0c73ac804a9b4ce88
+    # via
+    #   pre-commit
+    #   pylint
+    #   towncrier
 towncrier==19.2.0 \
     --hash=sha256:48251a1ae66d2cf7e6fa5552016386831b3e12bb3b2d08eb70374508c17a8196 \
-    --hash=sha256:de19da8b8cb44f18ea7ed3a3823087d2af8fcf497151bb9fd1e1b092ff56ed8d \
+    --hash=sha256:de19da8b8cb44f18ea7ed3a3823087d2af8fcf497151bb9fd1e1b092ff56ed8d
     # via -r requirements.in
 unidiff==0.6.0 \
     --hash=sha256:90c5214e9a357ff4b2fee19d91e77706638e3e00592a732d9405ea4e93da981f \
-    --hash=sha256:e1dd956a492ccc4351e24931b2f2d29c79e3be17a99dd8f14e95324321d93a88 \
+    --hash=sha256:e1dd956a492ccc4351e24931b2f2d29c79e3be17a99dd8f14e95324321d93a88
     # via -r requirements.in
 uritemplate==3.0.1 \
     --hash=sha256:07620c3f3f8eed1f12600845892b0e036a2420acf513c53f7de0abd911a5894f \
-    --hash=sha256:5af8ad10cec94f215e3f48112de2022e1d5a37ed427fbd88652fa908f2ab7cae \
+    --hash=sha256:5af8ad10cec94f215e3f48112de2022e1d5a37ed427fbd88652fa908f2ab7cae
     # via gidgethub
 urllib3==1.25.10 \
     --hash=sha256:91056c15fa70756691db97756772bb1eb9678fa585d9184f24534b100dc60f4a \
-    --hash=sha256:e7983572181f5e1522d9c98453462384ee92a0be7fac5f1413a1e35c56cc0461 \
+    --hash=sha256:e7983572181f5e1522d9c98453462384ee92a0be7fac5f1413a1e35c56cc0461
     # via sentry-sdk
 virtualenv==20.0.31 \
     --hash=sha256:43add625c53c596d38f971a465553f6318decc39d98512bc100fa1b1e839c8dc \
-    --hash=sha256:e0305af10299a7fb0d69393d8f04cb2965dda9351140d11ac8db4e5e3970451b \
+    --hash=sha256:e0305af10299a7fb0d69393d8f04cb2965dda9351140d11ac8db4e5e3970451b
     # via pre-commit
 wrapt==1.12.1 \
-    --hash=sha256:b62ffa81fb85f4332a4f609cab4ac40709470da05643a082ec1eb88e6d9b97d7 \
+    --hash=sha256:b62ffa81fb85f4332a4f609cab4ac40709470da05643a082ec1eb88e6d9b97d7
     # via astroid
 yarl==1.5.1 \
     --hash=sha256:040b237f58ff7d800e6e0fd89c8439b841f777dd99b4a9cca04d6935564b9409 \
@@ -333,11 +353,13 @@ yarl==1.5.1 \
     --hash=sha256:db6db0f45d2c63ddb1a9d18d1b9b22f308e52c83638c26b422d520a815c4b3fb \
     --hash=sha256:df89642981b94e7db5596818499c4b2219028f2a528c9c37cc1de45bf2fd3a3f \
     --hash=sha256:f18d68f2be6bf0e89f1521af2b1bb46e66ab0018faafa81d70f358153170a317 \
-    --hash=sha256:f379b7f83f23fe12823085cd6b906edc49df969eb99757f58ff382349a3303c6 \
+    --hash=sha256:f379b7f83f23fe12823085cd6b906edc49df969eb99757f58ff382349a3303c6
     # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:
 setuptools==50.3.0 \
     --hash=sha256:39060a59d91cf5cf403fa3bacbb52df4205a8c3585e0b9ba4b30e0e19d4c4b18 \
-    --hash=sha256:c77b3920663a435c9450d9d971c48f5a7478fca8881b2cd2564e59f970f03536 \
-    # via gunicorn, setuptools-scm
+    --hash=sha256:c77b3920663a435c9450d9d971c48f5a7478fca8881b2cd2564e59f970f03536
+    # via
+    #   gunicorn
+    #   setuptools-scm
