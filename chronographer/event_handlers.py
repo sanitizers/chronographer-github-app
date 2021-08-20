@@ -21,6 +21,7 @@ from .file_utils import (
 )
 from .labels import (
     LABEL_PROVIDED,
+    LABEL_SKIP,
 )
 
 try:
@@ -108,6 +109,7 @@ async def on_pr(event):
             event.data['check_suite']['pull_requests'][0]
         )
     pr_author = pull_request['user']
+    pr_labels = {label['name'] for label in pull_request['labels']}
     diff_url = (
         f'https://github.com/{repo_slug}'
         f'/pull/{pull_request["number"]:d}.diff'
@@ -116,6 +118,39 @@ async def on_pr(event):
     head_sha = pull_request['head']['sha']
 
     gh_api = RUNTIME_CONTEXT.app_installation_client
+
+    if LABEL_SKIP in pr_labels:
+        logger.info(
+            'Skipping PR event because the `%s` label is present',
+            LABEL_SKIP,
+        )
+        await gh_api.post(
+            check_runs_base_uri,
+            preview_api_version='antiope',
+            data=to_gh_query(NewCheckRequest(
+                head_branch, head_sha,
+                name='Timeline protection',
+                status='completed',
+                started_at=f'{datetime.utcnow().isoformat()}Z',
+                completed_at=f'{datetime.utcnow().isoformat()}Z',
+                conclusion='neutral',
+                output={
+                    'title':
+                        'Timeline protection: '
+                        'Nothing to do — change note not required',
+                    'text': f'Labels: {", ".join(pr_labels)}',
+                    'summary':
+                        'Heeeeey!'
+                        '\n\n'
+                        f'This PR has the `{LABEL_SKIP}` label meaning that '
+                        'the maintainers do not expect a change note in this '
+                        'pull request but you are still welcome to add one if '
+                        'you feel like it may be useful in the '
+                        'user-facing 📝 changelog.',
+                },
+            )),
+        )
+        return  # Interrupt the webhook event processing
 
     repo_config = await get_chronographer_config(ref=head_sha)
     if is_blacklisted(pr_author, repo_config.get('exclude', {})):
