@@ -217,6 +217,8 @@ async def on_pr(event):
     )
     diff = PatchSet(StringIO(diff_text))
 
+    towncrier_config = await get_towncrier_config(ref=head_sha) or {}
+
     update_check_req = UpdateCheckRequest(
         name='Timeline protection',
         status='in_progress',
@@ -228,11 +230,10 @@ async def on_pr(event):
     )
 
     _tc_fragment_re = await compile_towncrier_fragments_regex(
-        ref=head_sha,
         name_settings=repo_config.get('enforce_name', {}),
+        towncrier_config=towncrier_config,
     )
 
-    news_fragments_required = True
     news_fragments_added = [
         f for f in diff
         if f.is_added_file and _tc_fragment_re.search(f.path)
@@ -255,20 +256,23 @@ async def on_pr(event):
             },
         )
 
-    if not news_fragments_added and not requires_changelog(
-            (f.path for f in diff),
-            repo_config.get('paths', {}),
-    ):
-        news_fragments_required = False
+    news_fragments_required = requires_changelog(
+        diff,
+        _tc_fragment_re,
+        repo_config.get('paths', {}),
+        towncrier_config=towncrier_config,
+    )
 
-    report_success = news_fragments_required and news_fragments_added
+    report_success = not news_fragments_required or news_fragments_added
 
     update_check_req = attr.evolve(
         update_check_req,
         status='completed',
-        conclusion='success' if report_success else 'failure',
+        conclusion='success' if news_fragments_added else
+        'neutral' if not news_fragments_required else 'failure',
         completed_at=f'{datetime.utcnow().isoformat()}Z',
         output={
+            # Fragments added
             'title': f'{update_check_req.name}: Good to go',
             'text':
                 'The following news fragments found: '
@@ -282,6 +286,19 @@ async def on_pr(event):
                 'https://theeventchronicle.com'
                 '/wp-content/uploads/2014/10/vatican-library.jpg)',
         } if report_success else {
+            # Fragments not added and not required either
+            'title':
+                f'{update_check_req.name}: '
+                'Nothing to do — change note not required',
+            'summary':
+                'This PR looks like a release preparation meaning that '
+                'it removes the existing change notes and adds them to '
+                'the user-facing 📝 changelog.'
+                '\n\n'
+                'Normally, such changes do not expect a change notes '
+                'so you do not need to worry about adding one.',
+        } if not news_fragments_required else {
+            # Fragments not added but are expected
             'title': f'{update_check_req.name}: History fragments missing',
             'text': f'No files matching {_tc_fragment_re} pattern added',
             'summary':
@@ -303,20 +320,19 @@ async def on_pr(event):
     logger.info('gh_api=%s', gh_api)
 
 
-async def compile_towncrier_fragments_regex(ref, name_settings):
+async def compile_towncrier_fragments_regex(name_settings, towncrier_config):
     """Create fragments check regex based on the towncrier config."""
     fallback_base_dir = 'news'
 
     # e.g. ``.rst``:
     fragment_filename_suffix = re.escape(name_settings.get('suffix', ''))
 
-    towncrier_conf = await get_towncrier_config(ref=ref) or {}
     base_dir = (
-        towncrier_conf.get('directory', '').rstrip('/')
+        towncrier_config.get('directory', '').rstrip('/')
         or fallback_base_dir
     )
     change_types = (
-        tuple(t['directory'] for t in towncrier_conf.get('type', ()))
+        tuple(t['directory'] for t in towncrier_config.get('type', ()))
         or FALLBACK_CHANGE_TYPES
     )
 
@@ -363,8 +379,49 @@ def is_blacklisted(actor, blacklist):
     return False
 
 
-def requires_changelog(file_paths, config_paths):
+def is_a_release_pr(diff, tc_fragment_re, towncrier_config):
+    """Detect whether the current PR is a release.
+
+    The heuristic is simply checking if the PR has additions to the
+    changelog file combined with removal of the old change fragments.
+    """
+    fallback_changelog_filename = 'NEWS.rst'
+
+    changelog_filename = (
+        towncrier_config.get('filename', '')
+        or fallback_changelog_filename
+    )
+
+    any_change_fragments_removed = False
+    changelog_file_added = False
+
+    for file_entry in diff:
+        if not changelog_file_added and file_entry.path == changelog_filename:
+            changelog_file_added = bool(file_entry.added)
+
+        if (
+                not any_change_fragments_removed
+                and file_entry.is_removed_file
+                and tc_fragment_re.search(file_entry.path)
+        ):
+            any_change_fragments_removed = True
+
+        if any_change_fragments_removed and changelog_file_added:
+            return True
+
+    return False
+
+
+def requires_changelog(diff, tc_fragment_re, config_paths, towncrier_config):
     """Check whether a changelog fragment is needed for the changes."""
+    is_release = is_a_release_pr(
+        diff, tc_fragment_re, towncrier_config=towncrier_config,
+    )
+    if is_release:
+        return False
+
+    file_paths = (f.path for f in diff)
+
     include_paths = config_paths.get('include', [])
     exclude_paths = config_paths.get('exclude', [])
 
