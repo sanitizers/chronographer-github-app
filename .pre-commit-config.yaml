@@ -1,21 +1,21 @@
 ---
 repos:
-- repo: git://github.com/asottile/add-trailing-comma
+- repo: https://github.com/asottile/add-trailing-comma.git
   rev: v0.7.1
   hooks:
   - id: add-trailing-comma
 
-- repo: git://github.com/Lucas-C/pre-commit-hooks
+- repo: https://github.com/Lucas-C/pre-commit-hooks.git
   sha: v1.1.1
   hooks:
   - id: remove-tabs
 
-- repo: git://github.com/Lucas-C/pre-commit-hooks-markup
+- repo: https://github.com/Lucas-C/pre-commit-hooks-markup.git
   sha: v1.0.0
   hooks:
   - id: rst-linter
 
-- repo: git://github.com/pre-commit/pre-commit-hooks
+- repo: https://github.com/pre-commit/pre-commit-hooks.git
   sha: v2.0.0
   hooks:
   # Side-effects:
@@ -43,7 +43,7 @@ repos:
   - id: debug-statements
   - id: flake8
 
-- repo: git://github.com/chewse/pre-commit-mirrors-pydocstyle
+- repo: https://github.com/chewse/pre-commit-mirrors-pydocstyle.git
   sha: v2.1.1
   hooks:
   - id: pydocstyle
