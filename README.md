@@ -13,6 +13,7 @@ GitHub App's behavior:
 ---
 
 action-hints:
+  # check-title-prefix: chng  # default: `{{ branch-protection-check-name }}: `
   external-docs-url: https://pip.pypa.io/how-to-changelog
   inline-markdown: >
     Check out https://pip.pypa.io/how-to-changelog

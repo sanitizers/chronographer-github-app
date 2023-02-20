@@ -125,6 +125,10 @@ async def on_pr(event):
         'branch-protection-check-name',
         'Timeline protection',
     )
+    checks_summary_title_prefix = action_hints_config.get(
+        'check-title-prefix',
+        f'{checks_api_name!s}: ',
+    )
 
     checks_summary_epilogue = ''
 
@@ -161,7 +165,7 @@ async def on_pr(event):
                 conclusion='neutral',
                 output={
                     'title':
-                        f'{checks_api_name!s}: '
+                        f'{checks_summary_title_prefix!s}'
                         'Nothing to do — change note not required',
                     'text': f'Labels: {", ".join(pr_labels)}',
                     'summary':
@@ -194,7 +198,7 @@ async def on_pr(event):
                 completed_at=f'{datetime.utcnow().isoformat()}Z',
                 conclusion='neutral',
                 output={
-                    'title': f'{checks_api_name!s}: Nothing to do',
+                    'title': f'{checks_summary_title_prefix!s}Nothing to do',
                     'text':
                         'The author of this change '
                         f"({pr_author['login']!s}) "
