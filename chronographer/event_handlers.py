@@ -243,8 +243,12 @@ async def on_pr(event):
         data=to_gh_query(update_check_req),
     )
 
+    enforce_name_key = (
+        'enforce-name' if 'enforce-name' in repo_config
+        else 'enforce_name'
+    )
     _tc_fragment_re = await compile_towncrier_fragments_regex(
-        name_settings=repo_config.get('enforce_name', {}),
+        name_settings=repo_config.get(enforce_name_key, {}),
         towncrier_config=towncrier_config,
     )
 
