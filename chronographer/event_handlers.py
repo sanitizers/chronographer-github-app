@@ -121,11 +121,19 @@ async def on_pr(event):
 
     repo_config = await get_chronographer_config(ref=head_sha)
     action_hints_config = repo_config.get('action-hints', {})
-    external_docs_url = action_hints_config.get('external-docs-url')
 
     checks_summary_epilogue = ''
+
+    inline_markdown = action_hints_config.get('inline-markdown')
+    if inline_markdown is not None:
+        checks_summary_epilogue += f"""
+
+        {inline_markdown!s}
+        """
+
+    external_docs_url = action_hints_config.get('external-docs-url')
     if external_docs_url is not None:
-        checks_summary_epilogue = f"""
+        checks_summary_epilogue += f"""
 
         Please, refer to the following document for more details on how to
         craft a great change note for inclusion with your pull request:
