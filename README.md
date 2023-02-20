@@ -17,6 +17,8 @@ action-hints:
   inline-markdown: >
     Check out https://pip.pypa.io/how-to-changelog
 
+branch-protection-check-name: Timeline protection
+
 enforce-name:
   suffix: .rst  # can be empty or `.md` too
 

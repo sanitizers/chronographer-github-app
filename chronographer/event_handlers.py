@@ -121,6 +121,10 @@ async def on_pr(event):
 
     repo_config = await get_chronographer_config(ref=head_sha)
     action_hints_config = repo_config.get('action-hints', {})
+    checks_api_name = repo_config.get(
+        'branch-protection-check-name',
+        'Timeline protection',
+    )
 
     checks_summary_epilogue = ''
 
@@ -150,14 +154,14 @@ async def on_pr(event):
             preview_api_version='antiope',
             data=to_gh_query(NewCheckRequest(
                 head_branch, head_sha,
-                name='Timeline protection',
+                name=checks_api_name,
                 status='completed',
                 started_at=f'{datetime.utcnow().isoformat()}Z',
                 completed_at=f'{datetime.utcnow().isoformat()}Z',
                 conclusion='neutral',
                 output={
                     'title':
-                        'Timeline protection: '
+                        f'{checks_api_name!s}: '
                         'Nothing to do — change note not required',
                     'text': f'Labels: {", ".join(pr_labels)}',
                     'summary':
@@ -184,13 +188,13 @@ async def on_pr(event):
             preview_api_version='antiope',
             data=to_gh_query(NewCheckRequest(
                 head_branch, head_sha,
-                name='Timeline protection',
+                name=checks_api_name,
                 status='completed',
                 started_at=f'{datetime.utcnow().isoformat()}Z',
                 completed_at=f'{datetime.utcnow().isoformat()}Z',
                 conclusion='neutral',
                 output={
-                    'title': 'Timeline protection: Nothing to do',
+                    'title': f'{checks_api_name!s}: Nothing to do',
                     'text':
                         'The author of this change '
                         f"({pr_author['login']!s}) "
@@ -219,7 +223,7 @@ async def on_pr(event):
         preview_api_version='antiope',
         data=to_gh_query(NewCheckRequest(
             head_branch, head_sha,
-            name='Timeline protection',
+            name=checks_api_name,
             status='queued',
             started_at=f'{datetime.utcnow().isoformat()}Z',
         )),
@@ -242,7 +246,7 @@ async def on_pr(event):
     towncrier_config = await get_towncrier_config(ref=head_sha) or {}
 
     update_check_req = UpdateCheckRequest(
-        name='Timeline protection',
+        name=checks_api_name,
         status='in_progress',
     )
     resp = await gh_api.patch(
