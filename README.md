@@ -3,6 +3,34 @@
 # chronographer-github-app
 Your severe chronographer who is watching you record all the news to change note files!
 
+# Configuring the installed app
+
+Here's an example configuration file that a repository where Chronographer
+is installed can use optionally, to set certain aspects of this
+GitHub App's behavior:
+```yaml
+# .github/chronographer.yml
+---
+
+action-hints:
+  external-docs-url: https://pip.pypa.io/how-to-changelog
+  inline-markdown: >
+    Check out https://pip.pypa.io/how-to-changelog
+
+enforce-name:
+  suffix: .rst  # can be empty or `.md` too
+
+exclude:
+  bots:
+  - dependabot-preview
+  - dependabot
+  - patchback
+  humans:
+  - pyup-bot
+
+...
+```
+
 # Running the app
 ## Local development
 1. Copy a dotenv config template: `cp -v .env{.example,}`
