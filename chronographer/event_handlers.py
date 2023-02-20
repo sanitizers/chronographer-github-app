@@ -119,6 +119,19 @@ async def on_pr(event):
 
     gh_api = RUNTIME_CONTEXT.app_installation_client
 
+    repo_config = await get_chronographer_config(ref=head_sha)
+    action_hints_config = repo_config.get('action-hints', {})
+    external_docs_url = action_hints_config.get('external-docs-url')
+
+    checks_summary_epilogue = ''
+    if external_docs_url is not None:
+        checks_summary_epilogue = f"""
+
+        Please, refer to the following document for more details on how to
+        craft a great change note for inclusion with your pull request:
+        {external_docs_url!s}
+        """
+
     if LABEL_SKIP in pr_labels:
         logger.info(
             'Skipping PR event because the `%s` label is present',
@@ -146,13 +159,13 @@ async def on_pr(event):
                         'the maintainers do not expect a change note in this '
                         'pull request but you are still welcome to add one if '
                         'you feel like it may be useful in the '
-                        'user-facing 📝 changelog.',
+                        'user-facing 📝 changelog.'
+                        f'{checks_summary_epilogue!s}',
                 },
             )),
         )
         return  # Interrupt the webhook event processing
 
-    repo_config = await get_chronographer_config(ref=head_sha)
     if is_blacklisted(pr_author, repo_config.get('exclude', {})):
         logger.info(
             'Skipping this event because %s is blacklisted',
@@ -186,7 +199,8 @@ async def on_pr(event):
                         '\n\n'
                         '![Helloooo!]('
                         'https://www.goodfreephotos.com/albums/vector-images'
-                        '/blue-robot-vector-art.png)',
+                        '/blue-robot-vector-art.png)'
+                        f'{checks_summary_epilogue!s}',
                 },
             )),
         )
@@ -284,7 +298,8 @@ async def on_pr(event):
                 '\n\n'
                 '![You are good at keeping records!]('
                 'https://theeventchronicle.com'
-                '/wp-content/uploads/2014/10/vatican-library.jpg)',
+                '/wp-content/uploads/2014/10/vatican-library.jpg)'
+                f'{checks_summary_epilogue!s}',
         } if report_success else {
             # Fragments not added and not required either
             'title':
@@ -296,7 +311,8 @@ async def on_pr(event):
                 'the user-facing 📝 changelog.'
                 '\n\n'
                 'Normally, such changes do not expect a change notes '
-                'so you do not need to worry about adding one.',
+                'so you do not need to worry about adding one.'
+                f'{checks_summary_epilogue!s}',
         } if not news_fragments_required else {
             # Fragments not added but are expected
             'title': f'{update_check_req.name}: History fragments missing',
@@ -307,7 +323,8 @@ async def on_pr(event):
                 '\n\n'
                 '![Keeping chronicles is important]('
                 'https://theeventchronicle.com'
-                '/wp-content/uploads/2014/10/vatlib7.jpg)',
+                '/wp-content/uploads/2014/10/vatlib7.jpg)'
+                f'{checks_summary_epilogue!s}',
         },
     )
     resp = await gh_api.patch(
