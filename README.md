@@ -45,12 +45,6 @@ exclude:
    ```
 3. `python3.7 -m chronographer`
 
-## Heroku notes
-
-```console
-heroku buildpacks:add --index 1 https://github.com/ianpurvis/heroku-buildpack-version.git --app=sanitizers-chronographer-bot
-```
-
 # Known issues/limitations
 
 * Re-requesting a check run from Checks page in PRs doesn't always work.
