@@ -6,17 +6,17 @@ repos:
   - id: add-trailing-comma
 
 - repo: https://github.com/Lucas-C/pre-commit-hooks.git
-  sha: v1.1.1
+  rev: v1.1.1
   hooks:
   - id: remove-tabs
 
 - repo: https://github.com/Lucas-C/pre-commit-hooks-markup.git
-  sha: v1.0.0
+  rev: v1.0.0
   hooks:
   - id: rst-linter
 
 - repo: https://github.com/pre-commit/pre-commit-hooks.git
-  sha: v2.0.0
+  rev: v2.0.0
   hooks:
   # Side-effects:
   - id: trailing-whitespace
@@ -44,7 +44,7 @@ repos:
   - id: flake8
 
 - repo: https://github.com/chewse/pre-commit-mirrors-pydocstyle.git
-  sha: v2.1.1
+  rev: v2.1.1
   hooks:
   - id: pydocstyle
 
