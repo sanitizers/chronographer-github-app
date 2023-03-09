@@ -1,6 +1,7 @@
 ---
 
 ci:
+  autoupdate_schedule: quarterly
   skip:
   - pylint  # `local` hooks can't run on pre-commit.ci
 
