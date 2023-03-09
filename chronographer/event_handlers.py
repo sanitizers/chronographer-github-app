@@ -148,7 +148,10 @@ async def on_pr(event):
         {external_docs_url!s}
         """
 
-    if LABEL_SKIP in pr_labels:
+    labels_config = repo_config.get('labels', {})
+    repo_skip_label = labels_config.get('skip-changelog', LABEL_SKIP)
+
+    if repo_skip_label in pr_labels:
         logger.info(
             'Skipping PR event because the `%s` label is present',
             LABEL_SKIP,

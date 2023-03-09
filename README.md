@@ -29,6 +29,9 @@ exclude:
   humans:
   - pyup-bot
 
+labels:
+  skip-changelog: skip news  # default: `bot:chronographer:skip`
+
 ...
 ```
 
