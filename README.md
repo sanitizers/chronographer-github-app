@@ -32,6 +32,10 @@ exclude:
 labels:
   skip-changelog: skip news  # default: `bot:chronographer:skip`
 
+paths:  # relative modified file paths that do or don't need changelog mention
+  exclude: []
+  include: []
+
 ...
 ```
 
