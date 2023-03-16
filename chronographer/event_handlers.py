@@ -1,7 +1,6 @@
 """Webhook event handlers."""
 from datetime import datetime
 from io import StringIO
-from textwrap import dedent
 import logging
 import re
 
