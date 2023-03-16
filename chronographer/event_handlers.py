@@ -327,7 +327,7 @@ async def on_pr(event):
                 '\n\n'
                 '![You are good at keeping records! '
                 'Image source: Unsplash ID=bByhWydZLW0]'
-                '(https://source.unsplash.com/bByhWydZLW0/w=1600)'
+                '(https://source.unsplash.com/bByhWydZLW0/1600x500)'
                 f'{checks_summary_epilogue!s}',
         } if report_success else {
             # Fragments not added and not required either
