@@ -155,7 +155,7 @@ async def on_pr(event):
     if repo_skip_label in pr_labels:
         logger.info(
             'Skipping PR event because the `%s` label is present',
-            LABEL_SKIP,
+            repo_skip_label,
         )
         await gh_api.post(
             check_runs_base_uri,
@@ -175,7 +175,7 @@ async def on_pr(event):
                     'summary':
                         'Heeeeey!'
                         '\n\n'
-                        f'This PR has the `{LABEL_SKIP}` label meaning that '
+                        f'This PR has the `{repo_skip_label}` label meaning that '
                         'the maintainers do not expect a change note in this '
                         'pull request but you are still welcome to add one if '
                         'you feel like it may be useful in the '
