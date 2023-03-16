@@ -1,6 +1,7 @@
 """Webhook event handlers."""
 from datetime import datetime
 from io import StringIO
+from textwrap import dedent
 import logging
 import re
 
@@ -40,6 +41,12 @@ except ImportError:
 
 
 logger = logging.getLogger(__name__)
+
+
+CHECKS_SUMMARY_EPILOGUE_INTRO = """
+Please, refer to the following document for more details on how to
+craft a great change note for inclusion with your pull request:
+"""
 
 
 @process_event('ping')
@@ -134,19 +141,14 @@ async def on_pr(event):
 
     inline_markdown = action_hints_config.get('inline-markdown')
     if inline_markdown is not None:
-        checks_summary_epilogue += f"""
-
-        {inline_markdown!s}
-        """
+        checks_summary_epilogue += '\n'.join(('', '', inline_markdown))
 
     external_docs_url = action_hints_config.get('external-docs-url')
     if external_docs_url is not None:
-        checks_summary_epilogue += f"""
-
-        Please, refer to the following document for more details on how to
-        craft a great change note for inclusion with your pull request:
-        {external_docs_url!s}
-        """
+        checks_summary_epilogue += ''.join((
+            CHECKS_SUMMARY_EPILOGUE_INTRO,
+            external_docs_url,
+        ))
 
     labels_config = repo_config.get('labels', {})
     repo_skip_label = labels_config.get('skip-changelog', LABEL_SKIP)
