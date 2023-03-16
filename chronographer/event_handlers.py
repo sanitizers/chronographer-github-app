@@ -320,9 +320,9 @@ async def on_pr(event):
             'summary':
                 'Great! This change has been recorded to the chronicles'
                 '\n\n'
-                '![You are good at keeping records!]('
-                'https://theeventchronicle.com'
-                '/wp-content/uploads/2014/10/vatican-library.jpg)'
+                '![You are good at keeping records! '
+                'Image source: Unsplash ID=bByhWydZLW0]'
+                '(https://source.unsplash.com/bByhWydZLW0/w=1600)'
                 f'{checks_summary_epilogue!s}',
         } if report_success else {
             # Fragments not added and not required either
@@ -345,9 +345,9 @@ async def on_pr(event):
                 'Oops... This change does not have a record in the '
                 'archives. Just as if it never happened!'
                 '\n\n'
-                '![Keeping chronicles is important]('
-                'https://theeventchronicle.com'
-                '/wp-content/uploads/2014/10/vatlib7.jpg)'
+                '![Keeping chronicles is important! '
+                'Image source: Unsplash ID=VSE71nAZhU8]'
+                '(https://source.unsplash.com/VSE71nAZhU8/1600x500)'
                 f'{checks_summary_epilogue!s}',
         },
     )
