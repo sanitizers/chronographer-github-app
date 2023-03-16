@@ -152,6 +152,11 @@ async def on_pr(event):
     labels_config = repo_config.get('labels', {})
     repo_skip_label = labels_config.get('skip-changelog', LABEL_SKIP)
 
+    logger.info(
+        'Checking if `%s` label is present among these PR labels: `%s`.',
+        repo_skip_label,
+        ', '.join(pr_labels) or 'NO LABELS',
+    )
     if repo_skip_label in pr_labels:
         logger.info(
             'Skipping PR event because the `%s` label is present',
