@@ -251,10 +251,13 @@ async def on_pr(event):
     )
     check_runs_updates_uri = f'{check_runs_base_uri}/{resp["id"]:d}'
 
+    logger.info("Here's the diff URL: %s", diff_url)
     diff_text = await gh_api.getitem(
         diff_url,
     )
+    logger.info("Here's the diff text: %s", diff_text)
     diff = PatchSet(StringIO(diff_text))
+    logger.info("Here's the diff object: %r", diff)
 
     towncrier_config = await get_towncrier_config(ref=head_sha) or {}
 
@@ -286,7 +289,6 @@ async def on_pr(event):
         'present' if news_fragments_added
         else 'absent',
     )
-    logger.info("Here's the diff: %r", diff)
 
     if news_fragments_added:
         labels_url = f'{pull_request["issue_url"]}/labels'
