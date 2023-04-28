@@ -286,6 +286,7 @@ async def on_pr(event):
         'present' if news_fragments_added
         else 'absent',
     )
+    logger.info("Here's the diff: %r", diff)
 
     if news_fragments_added:
         labels_url = f'{pull_request["issue_url"]}/labels'
