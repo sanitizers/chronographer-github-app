@@ -3,4 +3,4 @@ octomachinery
 pre-commit
 pylint
 towncrier
-unidiff
+unidiff >= 0.7.1  # The first version detecting new empty files
