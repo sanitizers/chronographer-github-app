@@ -182,10 +182,10 @@ async def on_pr(event):
                     'summary':
                         'Heeeeey!'
                         '\n\n'
-                        f'This PR has the `{repo_skip_label}` label meaning that '
-                        'the maintainers do not expect a change note in this '
-                        'pull request but you are still welcome to add one if '
-                        'you feel like it may be useful in the '
+                        f'This PR has the `{repo_skip_label}` label meaning '
+                        'that the maintainers do not expect a change note in '
+                        'this pull request but you are still welcome to add '
+                        'one if you feel like it may be useful in the '
                         'user-facing 📝 changelog.'
                         f'{checks_summary_epilogue!s}',
                 },
