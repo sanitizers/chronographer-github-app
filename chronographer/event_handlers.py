@@ -102,7 +102,8 @@ async def on_install(
 # pylint: disable=too-many-locals
 async def on_pr(event):
     """React to GitHub App pull request webhook event."""
-    repo_slug = event.data['repository']['full_name']
+    event_repository = event.data['repository']
+    repo_slug = event_repository['full_name']
     check_runs_base_uri = f'/repos/{repo_slug}/check-runs'
     if event.event == 'pull_request':
         pull_request = event.data['pull_request']
@@ -122,10 +123,11 @@ async def on_pr(event):
     )
     head_branch = pull_request['head']['ref']
     head_sha = pull_request['head']['sha']
+    repo_default_branch = event_repository['default_branch']
 
     gh_api = RUNTIME_CONTEXT.app_installation_client
 
-    repo_config = await get_chronographer_config(ref=head_sha)
+    repo_config = await get_chronographer_config(ref=repo_default_branch)
     action_hints_config = repo_config.get('action-hints', {})
     checks_api_name = repo_config.get(
         'branch-protection-check-name',
@@ -259,7 +261,8 @@ async def on_pr(event):
     diff = PatchSet(StringIO(diff_text))
     logger.info("Here's the diff object: %r", diff)
 
-    towncrier_config = await get_towncrier_config(ref=head_sha) or {}
+    default_branch = head_sha or repos
+    towncrier_config = await get_towncrier_config(ref=default_branch) or {}
 
     update_check_req = UpdateCheckRequest(
         name=checks_api_name,
