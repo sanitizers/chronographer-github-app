@@ -261,7 +261,7 @@ async def on_pr(event):
     diff = PatchSet(StringIO(diff_text))
     logger.info("Here's the diff object: %r", diff)
 
-    default_branch = head_sha or repos
+    default_branch = head_sha or repo_default_branch
     towncrier_config = await get_towncrier_config(ref=default_branch) or {}
 
     update_check_req = UpdateCheckRequest(
