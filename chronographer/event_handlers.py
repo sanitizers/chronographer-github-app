@@ -322,7 +322,7 @@ async def on_pr(event):
         completed_at=f'{datetime.utcnow().isoformat()}Z',
         output={
             # Fragments added
-            'title': f'{update_check_req.name}: Good to go',
+            'title': f'{checks_summary_title_prefix!s}Good to go',
             'text':
                 'The following news fragments found: '
                 f'{news_fragments_added!r}'
@@ -338,7 +338,7 @@ async def on_pr(event):
         } if report_success else {
             # Fragments not added and not required either
             'title':
-                f'{update_check_req.name}: '
+                f'{checks_summary_title_prefix!s}'
                 'Nothing to do — change note not required',
             'summary':
                 'This PR looks like a release preparation meaning that '
@@ -350,7 +350,9 @@ async def on_pr(event):
                 f'{checks_summary_epilogue!s}',
         } if not news_fragments_required else {
             # Fragments not added but are expected
-            'title': f'{update_check_req.name}: History fragments missing',
+            'title':
+                f'{checks_summary_title_prefix!s}'
+                'History fragments missing',
             'text': f'No files matching {_tc_fragment_re} pattern added',
             'summary':
                 'Oops... This change does not have a record in the '
