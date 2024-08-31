@@ -1,9 +1,9 @@
 """Utility helpers for getting files from App/Action installations."""
 
+import tomllib
 import typing
 
 import gidgethub
-import toml
 
 from octomachinery.app.runtime.installation_utils import (
     get_installation_config,
@@ -27,7 +27,7 @@ async def read_pyproject_toml(
     if config_content is None:
         return {}
 
-    return toml.loads(config_content)
+    return tomllib.loads(config_content)
 
 
 async def get_towncrier_config(
