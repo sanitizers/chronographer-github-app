@@ -14,13 +14,18 @@ from octomachinery.app.runtime.installation_utils import (
 
 async def parse_towncrier_config(
         *,
+        towncrier_config_filename: str | None,
         ref: typing.Optional[str] = None,
 ) -> typing.Mapping[str, typing.Any]:
     """Fetch and parse a toml config file contents as dict."""
-    for towncrier_config_filename in 'towncrier.toml', 'pyproject.toml':
+    towncrier_config_candidates = (
+        (towncrier_config_filename, ) if towncrier_config_filename is not None
+        else ('towncrier.toml', 'pyproject.toml'),
+    )
+    for config_filename in towncrier_config_candidates:
         with contextlib.suppress(gidgethub.BadRequest):
             config_content = await read_file_contents_from_repo(
-                file_path=towncrier_config_filename,
+                file_path=config_filename,
                 ref=ref,
             )
             break
@@ -32,10 +37,14 @@ async def parse_towncrier_config(
 
 async def get_towncrier_config(
         *,
+        towncrier_config_filename: str | None,
         ref: typing.Optional[str] = None,
 ) -> typing.Mapping[str, typing.Any]:
     """Retrieve towncrier section from pyproject.toml file."""
-    pyproject_toml = await parse_towncrier_config(ref=ref)
+    pyproject_toml = await parse_towncrier_config(
+        towncrier_config_filename=towncrier_config_filename,
+        ref=ref,
+    )
     return pyproject_toml.get('tool', {}).get('towncrier')
 
 

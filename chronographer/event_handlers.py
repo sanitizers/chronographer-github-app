@@ -128,6 +128,10 @@ async def on_pr(event):
     gh_api = RUNTIME_CONTEXT.app_installation_client
 
     repo_config = await get_chronographer_config(ref=repo_default_branch)
+    paths_config = repo_config.get(
+        'paths',
+        {'towncrier-config-filename': None},
+    )
     action_hints_config = repo_config.get('action-hints', {})
     checks_api_name = repo_config.get(
         'branch-protection-check-name',
@@ -262,7 +266,13 @@ async def on_pr(event):
     logger.info("Here's the diff object: %r", diff)
 
     default_branch = head_sha or repo_default_branch
-    towncrier_config = await get_towncrier_config(ref=default_branch) or {}
+    towncrier_config = await get_towncrier_config(
+        towncrier_config_filename=paths_config.get(
+            'towncrier-config-filename',
+            None,
+        ),
+        ref=default_branch,
+    ) or {}
 
     update_check_req = UpdateCheckRequest(
         name=checks_api_name,
@@ -308,7 +318,7 @@ async def on_pr(event):
     news_fragments_required = requires_changelog(
         diff,
         _tc_fragment_re,
-        repo_config.get('paths', {}),
+        paths_config,
         towncrier_config=towncrier_config,
     )
 
