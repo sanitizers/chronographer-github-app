@@ -19,8 +19,8 @@ async def parse_towncrier_config(
 ) -> typing.Mapping[str, typing.Any]:
     """Fetch and parse a toml config file contents as dict."""
     towncrier_config_candidates = (
-        (towncrier_config_filename, ) if towncrier_config_filename is not None
-        else ('towncrier.toml', 'pyproject.toml'),
+        (towncrier_config_filename,) if towncrier_config_filename is not None
+        else ('towncrier.toml', 'pyproject.toml')
     )
     for config_filename in towncrier_config_candidates:
         with contextlib.suppress(gidgethub.BadRequest):
