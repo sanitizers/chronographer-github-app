@@ -28,6 +28,8 @@ async def parse_towncrier_config(
                 file_path=config_filename,
                 ref=ref,
             )
+            if config_content is None:
+                continue
             break
     else:
         return {}
