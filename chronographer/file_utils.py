@@ -1,5 +1,6 @@
 """Utility helpers for getting files from App/Action installations."""
 
+import contextlib
 import tomllib
 import typing
 
@@ -11,20 +12,19 @@ from octomachinery.app.runtime.installation_utils import (
 )
 
 
-async def read_pyproject_toml(
+async def parse_towncrier_config(
         *,
         ref: typing.Optional[str] = None,
 ) -> typing.Mapping[str, typing.Any]:
-    """Fetch and parse pyproject.toml contents as dict."""
-    try:
-        config_content = await read_file_contents_from_repo(
-            file_path='pyproject.toml',
-            ref=ref,
-        )
-    except gidgethub.BadRequest:
-        config_content = None
-
-    if config_content is None:
+    """Fetch and parse a toml config file contents as dict."""
+    for towncrier_config_filename in 'towncrier.toml', 'pyproject.toml':
+        with contextlib.suppress(gidgethub.BadRequest):
+            config_content = await read_file_contents_from_repo(
+                file_path=towncrier_config_filename,
+                ref=ref,
+            )
+            break
+    else:
         return {}
 
     return tomllib.loads(config_content)
@@ -35,7 +35,7 @@ async def get_towncrier_config(
         ref: typing.Optional[str] = None,
 ) -> typing.Mapping[str, typing.Any]:
     """Retrieve towncrier section from pyproject.toml file."""
-    pyproject_toml = await read_pyproject_toml(ref=ref)
+    pyproject_toml = await parse_towncrier_config(ref=ref)
     return pyproject_toml.get('tool', {}).get('towncrier')
 
 
