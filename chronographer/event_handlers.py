@@ -156,6 +156,10 @@ async def on_pr(event):
         ))
 
     labels_config = repo_config.get('labels', {})
+    fragment_provided_label = labels_config.get(
+        'fragment-provided',
+        LABEL_PROVIDED,
+    )
     repo_skip_label = labels_config.get('skip-changelog', LABEL_SKIP)
 
     logger.info(
@@ -310,14 +314,14 @@ async def on_pr(event):
         else 'absent',
     )
 
-    if news_fragments_added:
+    if news_fragments_added and fragment_provided_label is not None:
         labels_url = f'{pull_request["issue_url"]}/labels'
         await gh_api.post(
             labels_url,
             preview_api_version='symmetra',
             data={
                 'labels': [
-                    LABEL_PROVIDED,
+                    fragment_provided_label,
                 ],
             },
         )

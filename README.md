@@ -30,6 +30,7 @@ exclude:
   - pyup-bot
 
 labels:
+  fragment-provided: change note detected  # default: `bot:chronographer:provided`, disable with `~`
   skip-changelog: skip news  # default: `bot:chronographer:skip`
 
 paths:  # relative modified file paths that do or don't need changelog mention
