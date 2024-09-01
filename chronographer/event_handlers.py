@@ -171,29 +171,31 @@ async def on_pr(event):
         await gh_api.post(
             check_runs_base_uri,
             preview_api_version='antiope',
-            data=to_gh_query(NewCheckRequest(
-                head_branch, head_sha,
-                name=checks_api_name,
-                status='completed',
-                started_at=f'{datetime.utcnow().isoformat()}Z',
-                completed_at=f'{datetime.utcnow().isoformat()}Z',
-                conclusion='neutral',
-                output={
-                    'title':
-                        f'{checks_summary_title_prefix!s}'
-                        'Nothing to do — change note not required',
-                    'text': f'Labels: {", ".join(pr_labels)}',
-                    'summary':
-                        'Heeeeey!'
-                        '\n\n'
-                        f'This PR has the `{repo_skip_label}` label meaning '
-                        'that the maintainers do not expect a change note in '
-                        'this pull request but you are still welcome to add '
-                        'one if you feel like it may be useful in the '
-                        'user-facing 📝 changelog.'
-                        f'{checks_summary_epilogue!s}',
-                },
-            )),
+            data=to_gh_query(
+                NewCheckRequest(
+                    head_branch, head_sha,
+                    name=checks_api_name,
+                    status='completed',
+                    started_at=f'{datetime.utcnow().isoformat()}Z',
+                    completed_at=f'{datetime.utcnow().isoformat()}Z',
+                    conclusion='neutral',
+                    output={
+                        'title':
+                            f'{checks_summary_title_prefix!s}'
+                            'Nothing to do — change note not required',
+                        'text': f'Labels: {", ".join(pr_labels)}',
+                        'summary':
+                            'Heeeeey!'
+                            '\n\n'
+                            f'This PR has the `{repo_skip_label}` label '
+                            'meaning that the maintainers do not expect a '
+                            'change note in this pull request but you are '
+                            'still welcome to add one if you feel like it may '
+                            'be useful in the user-facing 📝 changelog.'
+                            f'{checks_summary_epilogue!s}',
+                    },
+                ),
+            ),
         )
         return  # Interrupt the webhook event processing
 
@@ -205,47 +207,52 @@ async def on_pr(event):
         await gh_api.post(
             check_runs_base_uri,
             preview_api_version='antiope',
-            data=to_gh_query(NewCheckRequest(
-                head_branch, head_sha,
-                name=checks_api_name,
-                status='completed',
-                started_at=f'{datetime.utcnow().isoformat()}Z',
-                completed_at=f'{datetime.utcnow().isoformat()}Z',
-                conclusion='neutral',
-                output={
-                    'title': f'{checks_summary_title_prefix!s}Nothing to do',
-                    'text':
-                        'The author of this change '
-                        f"({pr_author['login']!s}) "
-                        'is ignored because it is excluded '
-                        'via the repository config.',
-                    'summary':
-                        'Heeeeey!'
-                        "We've got an inclusive and welcoming community here."
-                        '\n\n'
-                        'All robots 🤖 are welcome to send PRs, '
-                        'no strings attached! '
-                        'This change does not need to be recorded '
-                        'to our chronicles.'
-                        '\n\n'
-                        '![Helloooo!]('
-                        'https://www.goodfreephotos.com/albums/vector-images'
-                        '/blue-robot-vector-art.png)'
-                        f'{checks_summary_epilogue!s}',
-                },
-            )),
+            data=to_gh_query(
+                NewCheckRequest(
+                    head_branch, head_sha,
+                    name=checks_api_name,
+                    status='completed',
+                    started_at=f'{datetime.utcnow().isoformat()}Z',
+                    completed_at=f'{datetime.utcnow().isoformat()}Z',
+                    conclusion='neutral',
+                    output={
+                        'title':
+                        f'{checks_summary_title_prefix!s}Nothing to do',
+                        'text':
+                            'The author of this change '
+                            f"({pr_author['login']!s}) "
+                            'is ignored because it is excluded '
+                            'via the repository config.',
+                        'summary':
+                            'Heeeeey!'
+                            "We've got an inclusive and welcoming community "
+                            'here.\n\n'
+                            'All robots 🤖 are welcome to send PRs, '
+                            'no strings attached! '
+                            'This change does not need to be recorded '
+                            'to our chronicles.'
+                            '\n\n'
+                            '![Helloooo!]('
+                            'https://www.goodfreephotos.com/albums'
+                            '/vector-images/blue-robot-vector-art.png)'
+                            f'{checks_summary_epilogue!s}',
+                    },
+                ),
+            ),
         )
         return  # Interrupt the webhook event processing
 
     resp = await gh_api.post(
         check_runs_base_uri,
         preview_api_version='antiope',
-        data=to_gh_query(NewCheckRequest(
-            head_branch, head_sha,
-            name=checks_api_name,
-            status='queued',
-            started_at=f'{datetime.utcnow().isoformat()}Z',
-        )),
+        data=to_gh_query(
+            NewCheckRequest(
+                head_branch, head_sha,
+                name=checks_api_name,
+                status='queued',
+                started_at=f'{datetime.utcnow().isoformat()}Z',
+            ),
+        ),
     )
     logger.info(
         'Check suite ID is %s',
