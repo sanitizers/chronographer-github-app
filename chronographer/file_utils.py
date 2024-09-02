@@ -28,7 +28,8 @@ async def parse_towncrier_config(
                 file_path=config_filename,
                 ref=ref,
             )
-            break
+            if config_content is not None:  # File not found in the repo?
+                break
     else:
         return {}
 
