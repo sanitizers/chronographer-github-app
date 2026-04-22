@@ -108,13 +108,15 @@ async def on_pr(event):
     if event.event == 'pull_request':
         pull_request = event.data['pull_request']
     elif event.event == 'check_run':
-        pull_request = (
-            event.data['check_run']['check_suite']['pull_requests'][0]
-        )
+        prs = event.data['check_run']['check_suite']['pull_requests']
+        if not prs:
+            return
+        pull_request = prs[0]
     elif event.event == 'check_suite':
-        pull_request = (
-            event.data['check_suite']['pull_requests'][0]
-        )
+        prs = event.data['check_suite']['pull_requests']
+        if not prs:
+            return
+        pull_request = prs[0]
     pr_author = pull_request['user']
     pr_labels = {label['name'] for label in pull_request['labels']}
     diff_url = (
