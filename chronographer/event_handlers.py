@@ -119,7 +119,7 @@ async def on_pr(event):
     pr_labels = {label['name'] for label in pull_request['labels']}
     diff_url = (
         f'https://github.com/{repo_slug}'
-        f'/pull/{pull_request["number"]:d}.diff'
+        f'/pull/{pull_request['number']:d}.diff'
     )
     head_branch = pull_request['head']['ref']
     head_sha = pull_request['head']['sha']
@@ -187,7 +187,7 @@ async def on_pr(event):
                         'title':
                             f'{checks_summary_title_prefix!s}'
                             'Nothing to do — change note not required',
-                        'text': f'Labels: {", ".join(pr_labels)}',
+                        'text': f'Labels: {', '.join(pr_labels)}',
                         'summary':
                             'Heeeeey!'
                             '\n\n'
@@ -266,7 +266,7 @@ async def on_pr(event):
         'Check run ID is %s',
         resp['id'],
     )
-    check_runs_updates_uri = f'{check_runs_base_uri}/{resp["id"]:d}'
+    check_runs_updates_uri = f'{check_runs_base_uri}/{resp['id']:d}'
 
     logger.info("Here's the diff URL: %s", diff_url)
     diff_text = await gh_api.getitem(
@@ -315,7 +315,7 @@ async def on_pr(event):
     )
 
     if news_fragments_added and fragment_provided_label is not None:
-        labels_url = f'{pull_request["issue_url"]}/labels'
+        labels_url = f'{pull_request['issue_url']}/labels'
         await gh_api.post(
             labels_url,
             preview_api_version='symmetra',
