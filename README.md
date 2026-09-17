@@ -48,9 +48,17 @@ paths:  # relative modified file paths that do or don't need changelog mention
    * You should be able to inline the key using a trick like this:
    ```console
    GITHUB_PRIVATE_KEY_PATH=~/Downloads/your-app-slug.2019-03-24.private-key.pem
-   cat $GITHUB_PRIVATE_KEY_PATH | python3.7 -c 'import sys; inline_private_key=r"\n".join(map(str.strip, sys.stdin.readlines())); print(f"GITHUB_PRIVATE_KEY='"'"'{inline_private_key}'"'"'", end="")' >> .env
+   cat $GITHUB_PRIVATE_KEY_PATH | python3 -c 'import sys; inline_private_key=r"\n".join(map(str.strip, sys.stdin.readlines())); print(f"GITHUB_PRIVATE_KEY='"'"'{inline_private_key}'"'"'", end="")' >> .env
    ```
-3. `python3.7 -m chronographer`
+3. `python3 -m chronographer`
+
+## Checking that the app boots
+`./test_boot.sh` starts the app against a throwaway GitHub App identity under
+whatever `python` is on `PATH`. Authenticating that identity is *expected* to
+fail — what the script checks is everything that has to work before that: the
+dotenv config loading, the event loop bootstrap, the `anyio` runner, the
+aiohttp client session and the GitHub App wrapper. It is how to tell whether a
+given interpreter can run this app at all, without deploying it.
 
 # Known issues/limitations
 
@@ -60,3 +68,11 @@ paths:  # relative modified file paths that do or don't need changelog mention
   https://github.community/t5/GitHub-API-Development-and/BUG-Sometimes-rerequested-check-run-events-don-t-contain-a-PR/m-p/26964/thread-id/2189
   ). The link is historic and the discussion contents seem to have been
   lost during GitHub's platform migrations.
+* `octomachinery` caps `anyio` below v2, and `anyio` v1 starts the app via
+  `asyncio.get_event_loop()`, relying on it to implicitly create a loop.
+  Python 3.14 removed that fallback, so `chronographer/__main__.py` creates
+  the loop itself. That workaround can go away once `octomachinery` supports
+  `anyio` v2+. The GitHub Action entry point never needed it.
+* Installing the lock file under Python 3.14 builds `cffi` from source — the
+  pinned version predates CPython 3.14 and ships no wheel for it. Deployment
+  images need a C compiler and the libffi headers until that pin moves.

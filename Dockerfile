@@ -1,4 +1,4 @@
-FROM python:3.7-slim
+FROM python:3.13-slim
 
 LABEL "maintainer"="Sviatoslav Sydorenko <wk+github-actions@sydorenko.org.ua>"
 LABEL "repository"="https://github.com/sanitizers/chronographer-github-app"
