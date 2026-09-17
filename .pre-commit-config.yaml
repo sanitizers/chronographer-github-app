@@ -7,27 +7,30 @@ ci:
 
 repos:
 - repo: https://github.com/asottile/add-trailing-comma.git
-  rev: v3.1.0
+  rev: v4.0.0
   hooks:
   - id: add-trailing-comma
 
 - repo: https://github.com/Lucas-C/pre-commit-hooks.git
-  rev: v1.1.1
+  rev: v1.5.6
   hooks:
   - id: remove-tabs
 
 - repo: https://github.com/Lucas-C/pre-commit-hooks-markup.git
-  rev: v1.0.0
+  rev: v1.0.1
   hooks:
   - id: rst-linter
 
 - repo: https://github.com/pre-commit/pre-commit-hooks.git
-  rev: v2.0.0
+  # `double-quote-string-fixer` < v4 rewrites f-string subscripts into
+  # PEP 701 nested quotes under Python 3.12+:
+  rev: v6.0.0
   hooks:
   # Side-effects:
   - id: trailing-whitespace
   - id: check-merge-conflict
   - id: double-quote-string-fixer
+  - id: fix-byte-order-marker
   - id: end-of-file-fixer
   - id: requirements-txt-fixer
     exclude: requirements.txt
@@ -35,7 +38,6 @@ repos:
   # Non-modifying checks:
   - id: name-tests-test
   - id: check-added-large-files
-  - id: check-byte-order-marker
   - id: check-case-conflict
   # disabled due to pre-commit/pre-commit-hooks#159
   #- id: check-docstring-first
@@ -49,7 +51,7 @@ repos:
   - id: debug-statements
 
 - repo: https://github.com/PyCQA/flake8.git
-  rev: 6.0.0
+  rev: 7.3.0  # `pycodestyle` < 2.11 miscounts f-string format specs
   hooks:
   - id: flake8
     alias: flake8-no-wps
@@ -62,7 +64,12 @@ repos:
     - flake8-docstrings ~= 1.6.0
     - flake8-length ~= 0.3.0
     - flake8-logging-format ~= 0.7.5
-    - flake8-pytest-style ~= 1.6.0
+    # `flake8-logging-format` still imports `pkg_resources`, which
+    # `setuptools` dropped in v81:
+    - setuptools < 81
+    # `flake8-pytest-style` < v2 reaches for `ast.NameConstant`, which
+    # Python 3.14 dropped:
+    - flake8-pytest-style ~= 2.2.0
     # - flake8-spellcheck ~= 0.28.0; python_version >= "3.8"
     # - flake8-spellcheck ~= 0.26.0; python_version < "3.8"
     language_version: python3

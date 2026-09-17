@@ -1,10 +1,12 @@
 """Webhook event handlers."""
+import base64
 from datetime import datetime
 from io import StringIO
 import logging
 import re
 
 import attr
+import gidgethub
 from unidiff import PatchSet
 
 from octomachinery.app.routing import process_event, process_event_actions
@@ -15,29 +17,23 @@ from octomachinery.github.models.checks_api_requests import (
     to_gh_query,
 )
 
-from .file_utils import (
-    get_chronographer_config,
-    get_towncrier_config,
+from .change_notes import (
+    change_note_path,
+    change_note_types,
+    collect_change_notes,
+    compile_towncrier_fragments_regex,
+    contentless_change_types,
+    enforce_name_settings,
+    load_towncrier_config,
+    requires_changelog,
 )
+from .file_utils import get_chronographer_config
 from .labels import (
-    LABEL_PROVIDED,
-    LABEL_SKIP,
+    apply_label_changes,
+    head_moved_since_label,
+    plan_label_changes,
+    resolve_label_names,
 )
-
-try:
-    from towncrier._settings import _default_types as _towncrier_default_types
-    FALLBACK_CHANGE_TYPES = tuple(_towncrier_default_types)
-except ImportError:
-    FALLBACK_CHANGE_TYPES = (
-        'bugfix',
-        'doc',
-        'feature',
-        'misc',
-        'removal',
-        'trivial',
-        'vendor',
-    )
-
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +42,27 @@ CHECKS_SUMMARY_EPILOGUE_INTRO = """
 Please, refer to the following document for more details on how to
 craft a great change note for inclusion with your pull request:
 """
+
+# Identifier namespace of the "create a change note" check run buttons:
+CHANGE_NOTE_ACTION_PREFIX = 'mkfrag:'
+
+# The closing keywords GitHub itself recognises in a pull request body,
+# followed by any of the issue references it accepts:
+CLOSING_KEYWORDS_RE = re.compile(
+    r'\b(?:clos(?:e|es|ed)|fix(?:es|ed)?|resolv(?:e|es|ed))\b\s*:?\s*'
+    r'(?:'
+    r'(?P<slug>[\w.-]+/[\w.-]+)?\#'
+    r'|GH-'
+    r'|https?://github\.com/(?P<url_slug>[\w.-]+/[\w.-]+)/issues/'
+    r')'
+    r'(?P<number>\d+)\b',
+    re.IGNORECASE,
+)
+
+# The Checks API caps a check run at three actions and every action
+# identifier at 20 characters:
+MAX_CHECK_RUN_ACTIONS = 3
+MAX_CHANGE_TYPE_LENGTH = 20 - len(CHANGE_NOTE_ACTION_PREFIX)
 
 
 @process_event('ping')
@@ -99,33 +116,32 @@ async def on_install(
 )
 @process_event_actions('check_run', {'rerequested'})
 @process_event_actions('check_suite', {'rerequested'})
-# pylint: disable=too-many-locals
+# This handler is long enough to trip both size checks and wants a
+# split, which is a refactor of its own:
+# pylint: disable=too-many-locals,too-many-statements
 async def on_pr(event):
     """React to GitHub App pull request webhook event."""
     event_repository = event.data['repository']
     repo_slug = event_repository['full_name']
     check_runs_base_uri = f'/repos/{repo_slug}/check-runs'
-    if event.event == 'pull_request':
-        pull_request = event.data['pull_request']
-    elif event.event == 'check_run':
-        pull_request = (
-            event.data['check_run']['check_suite']['pull_requests'][0]
-        )
-    elif event.event == 'check_suite':
-        pull_request = (
-            event.data['check_suite']['pull_requests'][0]
-        )
+
+    gh_api = RUNTIME_CONTEXT.app_installation_client
+
+    pull_request = await resolve_pull_request(event, repo_slug, gh_api)
+    if pull_request is None:
+        return  # Interrupt the webhook event processing
+
     pr_author = pull_request['user']
     pr_labels = {label['name'] for label in pull_request['labels']}
+    pr_labels_list = ', '.join(pr_labels)
+    pr_number = pull_request['number']
     diff_url = (
         f'https://github.com/{repo_slug}'
-        f'/pull/{pull_request["number"]:d}.diff'
+        f'/pull/{pr_number:d}.diff'
     )
     head_branch = pull_request['head']['ref']
     head_sha = pull_request['head']['sha']
     repo_default_branch = event_repository['default_branch']
-
-    gh_api = RUNTIME_CONTEXT.app_installation_client
 
     repo_config = await get_chronographer_config(ref=repo_default_branch)
     paths_config = repo_config.get(
@@ -155,17 +171,13 @@ async def on_pr(event):
             external_docs_url,
         ))
 
-    labels_config = repo_config.get('labels', {})
-    fragment_provided_label = labels_config.get(
-        'fragment-provided',
-        LABEL_PROVIDED,
-    )
-    repo_skip_label = labels_config.get('skip-changelog', LABEL_SKIP)
+    label_names = resolve_label_names(repo_config)
+    repo_skip_label = label_names['skip']
 
     logger.info(
         'Checking if `%s` label is present among these PR labels: `%s`.',
         repo_skip_label,
-        ', '.join(pr_labels) or 'NO LABELS',
+        pr_labels_list or 'NO LABELS',
     )
     if repo_skip_label in pr_labels:
         logger.info(
@@ -187,7 +199,7 @@ async def on_pr(event):
                         'title':
                             f'{checks_summary_title_prefix!s}'
                             'Nothing to do — change note not required',
-                        'text': f'Labels: {", ".join(pr_labels)}',
+                        'text': f'Labels: {pr_labels_list!s}',
                         'summary':
                             'Heeeeey!'
                             '\n\n'
@@ -262,11 +274,12 @@ async def on_pr(event):
         'Check suite ID is %s',
         resp['check_suite']['id'],
     )
+    check_run_id = resp['id']
     logger.info(
         'Check run ID is %s',
-        resp['id'],
+        check_run_id,
     )
-    check_runs_updates_uri = f'{check_runs_base_uri}/{resp["id"]:d}'
+    check_runs_updates_uri = f'{check_runs_base_uri}/{check_run_id:d}'
 
     logger.info("Here's the diff URL: %s", diff_url)
     diff_text = await gh_api.getitem(
@@ -276,14 +289,10 @@ async def on_pr(event):
     diff = PatchSet(StringIO(diff_text))
     logger.info("Here's the diff object: %r", diff)
 
-    default_branch = head_sha or repo_default_branch
-    towncrier_config = await get_towncrier_config(
-        towncrier_config_filename=paths_config.get(
-            'towncrier-config-filename',
-            None,
-        ),
-        ref=default_branch,
-    ) or {}
+    towncrier_config = await load_towncrier_config(
+        repo_config,
+        ref=head_sha or repo_default_branch,
+    )
 
     update_check_req = UpdateCheckRequest(
         name=checks_api_name,
@@ -295,36 +304,25 @@ async def on_pr(event):
         data=to_gh_query(update_check_req),
     )
 
-    enforce_name_key = (
-        'enforce-name' if 'enforce-name' in repo_config
-        else 'enforce_name'
-    )
     _tc_fragment_re = await compile_towncrier_fragments_regex(
-        name_settings=repo_config.get(enforce_name_key, {}),
+        name_settings=enforce_name_settings(repo_config),
         towncrier_config=towncrier_config,
     )
 
-    news_fragments_added = [
-        f for f in diff
-        if f.is_added_file and _tc_fragment_re.search(f.path)
-    ]
+    news_fragments_added, overfull_change_notes = collect_change_notes(
+        diff,
+        _tc_fragment_re,
+        contentless_change_types(towncrier_config),
+    )
+    news_fragment_types = {
+        _tc_fragment_re.search(f.path).group('fragment_type')
+        for f in news_fragments_added
+    }
     logger.info(
         'News fragments are %s',
         'present' if news_fragments_added
         else 'absent',
     )
-
-    if news_fragments_added and fragment_provided_label is not None:
-        labels_url = f'{pull_request["issue_url"]}/labels'
-        await gh_api.post(
-            labels_url,
-            preview_api_version='symmetra',
-            data={
-                'labels': [
-                    fragment_provided_label,
-                ],
-            },
-        )
 
     news_fragments_required = requires_changelog(
         diff,
@@ -333,57 +331,77 @@ async def on_pr(event):
         towncrier_config=towncrier_config,
     )
 
-    report_success = not news_fragments_required or news_fragments_added
+    change_type_requirements = repo_config.get('require-change-types') or {}
+    label_origins = (
+        await collect_requirement_labels(
+            gh_api,
+            repo_slug=repo_slug,
+            pull_request=pull_request,
+            requirements=change_type_requirements,
+        )
+        if repo_config.get('infer-labels-from-linked-issues', False)
+        else dict.fromkeys(pr_labels)
+    )
+
+    unmet_change_type_requirements = find_unmet_change_type_requirements(
+        label_origins.keys(),
+        change_type_requirements,
+        news_fragment_types,
+    )
+
+    demanded_change_types = sorted({
+        change_type
+        for accepted_types in unmet_change_type_requirements.values()
+        for change_type in as_change_type_set(accepted_types)
+    })
+
+    more_label = label_names['more']
+    more_requested = more_label is not None and more_label in pr_labels
+    more_pending = more_requested and not await head_moved_since_label(
+        gh_api,
+        repo_slug=repo_slug,
+        issue_url=pull_request['issue_url'],
+        head_sha=head_sha,
+        label=more_label,
+    )
+
+    conclusion, check_output = build_check_result(
+        title_prefix=checks_summary_title_prefix,
+        epilogue=checks_summary_epilogue,
+        fragments_added=news_fragments_added,
+        fragments_required=news_fragments_required,
+        fragment_re=_tc_fragment_re,
+        unmet_change_type_requirements=unmet_change_type_requirements,
+        label_origins=label_origins,
+        overfull_change_notes=overfull_change_notes,
+        more_requested=more_pending,
+    )
+
+    labels_added, labels_removed = plan_label_changes(
+        conclusion=conclusion,
+        current_labels=pr_labels,
+        names=label_names,
+        drop_more=more_requested and not more_pending,
+    )
+    await apply_label_changes(
+        gh_api,
+        issue_url=pull_request['issue_url'],
+        add=labels_added,
+        remove=labels_removed,
+    )
 
     update_check_req = attr.evolve(
         update_check_req,
         status='completed',
-        conclusion='success' if news_fragments_added else
-        'neutral' if not news_fragments_required else 'failure',
+        conclusion=conclusion,
         completed_at=f'{datetime.utcnow().isoformat()}Z',
-        output={
-            # Fragments added
-            'title': f'{checks_summary_title_prefix!s}Good to go',
-            'text':
-                'The following news fragments found: '
-                f'{news_fragments_added!r}'
-                '\n\n'
-                f'Pattern: {_tc_fragment_re}',
-            'summary':
-                'Great! This change has been recorded to the chronicles'
-                '\n\n'
-                '![You are good at keeping records! '
-                'Image source: Unsplash ID=bByhWydZLW0]'
-                '(https://source.unsplash.com/bByhWydZLW0/1600x500)'
-                f'{checks_summary_epilogue!s}',
-        } if report_success else {
-            # Fragments not added and not required either
-            'title':
-                f'{checks_summary_title_prefix!s}'
-                'Nothing to do — change note not required',
-            'summary':
-                'This PR looks like a release preparation meaning that '
-                'it removes the existing change notes and adds them to '
-                'the user-facing 📝 changelog.'
-                '\n\n'
-                'Normally, such changes do not expect a change notes '
-                'so you do not need to worry about adding one.'
-                f'{checks_summary_epilogue!s}',
-        } if not news_fragments_required else {
-            # Fragments not added but are expected
-            'title':
-                f'{checks_summary_title_prefix!s}'
-                'History fragments missing',
-            'text': f'No files matching {_tc_fragment_re} pattern added',
-            'summary':
-                'Oops... This change does not have a record in the '
-                'archives. Just as if it never happened!'
-                '\n\n'
-                '![Keeping chronicles is important! '
-                'Image source: Unsplash ID=VSE71nAZhU8]'
-                '(https://source.unsplash.com/VSE71nAZhU8/1600x500)'
-                f'{checks_summary_epilogue!s}',
-        },
+        output=check_output,
+        # Only a failing run has something for the maintainer to fix, so
+        # that is the only one worth putting buttons on:
+        actions=build_change_note_actions(
+            demanded_types=demanded_change_types,
+            known_types=change_note_types(towncrier_config),
+        ) if conclusion == 'failure' else [],
     )
     resp = await gh_api.patch(
         check_runs_updates_uri,
@@ -395,41 +413,436 @@ async def on_pr(event):
     logger.info('gh_api=%s', gh_api)
 
 
-async def compile_towncrier_fragments_regex(name_settings, towncrier_config):
-    """Create fragments check regex based on the towncrier config."""
-    fallback_base_dir = 'news'
+@process_event_actions('check_run', {'requested_action'})
+async def on_change_note_requested(event):
+    """Commit the change note a check run button asks for."""
+    requested_action = event.data['requested_action']['identifier']
+    if not requested_action.startswith(CHANGE_NOTE_ACTION_PREFIX):
+        logger.info(
+            'Ignoring the unknown requested action `%s`',
+            requested_action,
+        )
+        return
 
-    # e.g. ``.rst``:
-    fragment_filename_suffix = re.escape(name_settings.get('suffix', ''))
+    change_type = requested_action[len(CHANGE_NOTE_ACTION_PREFIX):]
 
-    base_dir = (
-        towncrier_config.get('directory', '').rstrip('/')
-        or fallback_base_dir
+    event_repository = event.data['repository']
+    repo_slug = event_repository['full_name']
+    gh_api = RUNTIME_CONTEXT.app_installation_client
+
+    pull_request = await resolve_pull_request(event, repo_slug, gh_api)
+    if pull_request is None:
+        return  # Interrupt the webhook event processing
+
+    head = pull_request['head']
+    repo_config = await get_chronographer_config(
+        ref=event_repository['default_branch'],
     )
-    change_types = (
-        tuple(t['directory'] for t in towncrier_config.get('type', ()))
-        or FALLBACK_CHANGE_TYPES
+    towncrier_config = await load_towncrier_config(
+        repo_config,
+        ref=head['sha'] or event_repository['default_branch'],
     )
 
-    # Ref:
-    # * github.com/hawkowl/towncrier/blob/ecd438c/src/towncrier/_builder.py#L58
-    return re.compile(
-        (
-            r'{base_dir}/{file_pattern}'
-            r'(?P<fragment_type>{fragment_types})'
-            r'{number_pattern}'
-            r'{suffix_pattern}'
-            r'{postfix_pattern}'
-            r'$'
-        ).format(
-            base_dir=base_dir,
-            file_pattern=r'(?P<issue_number>[^\./]+)\.',  # should we enforce?
-            fragment_types=r'|'.join(change_types),
-            number_pattern=r'(\.\d+)?',  # better be a number
-            suffix_pattern=r'(\.[^\./]+)*',
-            postfix_pattern=fragment_filename_suffix,
+    # The identifier comes back from GitHub rather than from the click, but
+    # a fragment of an unknown type would not satisfy the check anyway --
+    # and this keeps a forged payload from naming a path of its choosing:
+    if change_type not in change_note_types(towncrier_config):
+        logger.info(
+            'Refusing to create a `%s` change note because towncrier '
+            'does not accept that type',
+            change_type,
+        )
+        return
+
+    if head['repo'] is None:
+        await report_change_note_failure(
+            event, gh_api, repo_slug,
+            reason='the head repository of this pull request is gone',
+        )
+        return
+
+    pr_title = pull_request['title']
+    fragment_path = change_note_path(
+        repo_config=repo_config,
+        towncrier_config=towncrier_config,
+        change_type=change_type,
+        pr_number=pull_request['number'],
+    )
+    logger.info('Creating `%s` on `%s`', fragment_path, head['ref'])
+    try:
+        await commit_change_note(
+            gh_api,
+            head=head,
+            path=fragment_path,
+            # An actually empty file would give the pull request
+            # participants no line to attach a suggested change to, so
+            # seed it with the title:
+            text=f'{pr_title!s}\n',
+            message=f'📝 Add an empty {change_type!s} change note',
+        )
+    except gidgethub.HTTPException as commit_error:
+        logger.info(
+            'Failed to create `%s`, GitHub said %s',
+            fragment_path,
+            commit_error.status_code,
+        )
+        await report_change_note_failure(
+            event, gh_api, repo_slug,
+            reason=f'pushing `{fragment_path!s}` to the head branch failed',
+        )
+        return
+
+    # The push makes GitHub send a ``synchronize`` event, and the check run
+    # it starts reports on the change note that just landed.  Nothing left
+    # to say here.
+    logger.info('Created `%s`', fragment_path)
+
+
+async def commit_change_note(gh_api, *, head, path, text, message):
+    """Add a file to the head branch of a pull request."""
+    head_slug = head['repo']['full_name']
+    await gh_api.put(
+        f'/repos/{head_slug!s}/contents/{path!s}',
+        data={
+            'branch': head['ref'],
+            'content': base64.b64encode(text.encode()).decode(),
+            'message': message,
+        },
+    )
+
+
+async def report_change_note_failure(event, gh_api, repo_slug, *, reason):
+    """Tell the check run why its button did not produce a change note."""
+    check_run = event.data['check_run']
+    check_run_id = check_run['id']
+    now = f'{datetime.utcnow().isoformat()}Z'
+    await gh_api.patch(
+        f'/repos/{repo_slug}/check-runs/{check_run_id:d}',
+        preview_api_version='antiope',
+        data=to_gh_query(
+            UpdateCheckRequest(
+                name=check_run['name'],
+                status='completed',
+                conclusion='failure',
+                completed_at=now,
+                output={
+                    'title': 'Could not create the change note',
+                    'summary':
+                        'Sorry! The change note you asked for did not '
+                        f'happen because {reason!s}.'
+                        '\n\n'
+                        'Adding the file by hand works just as well.',
+                },
+            ),
         ),
     )
+
+
+async def resolve_pull_request(event, repo_slug, gh_api):
+    """Look up the full pull request payload an event points at.
+
+    ``pull_request`` events carry it inline.  The Checks API only
+    embeds stub pull request objects that lack ``user``, ``labels``
+    and ``issue_url`` -- and it leaves that list empty altogether when
+    the head branch lives in a fork -- so re-requested checks need an
+    extra round trip.
+
+    Returns ``None`` when no pull request is associated with the event.
+    """
+    if event.event == 'pull_request':
+        return event.data['pull_request']
+
+    check_suite = (
+        event.data['check_run']['check_suite'] if event.event == 'check_run'
+        else event.data['check_suite']
+    )
+
+    pull_request_stubs = check_suite['pull_requests']
+    if pull_request_stubs:
+        pr_number = pull_request_stubs[0]['number']
+        return await gh_api.getitem(f'/repos/{repo_slug}/pulls/{pr_number:d}')
+
+    # Fork head branches never show up in ``pull_requests``, but the
+    # head commit still knows which pull requests it belongs to:
+    head_sha = check_suite['head_sha']
+    associated_pull_requests = await gh_api.getitem(
+        f'/repos/{repo_slug}/commits/{head_sha}/pulls',
+    )
+    if associated_pull_requests:
+        return associated_pull_requests[0]
+
+    logger.info(
+        'Skipping the %s event because no pull request is associated '
+        'with the head commit %s',
+        event.event,
+        head_sha,
+    )
+    return None
+
+
+def find_linked_issue_numbers(pr_body, repo_slug):
+    """Return the same-repo issues a pull request body says it closes.
+
+    Only the closing keywords spelled out in the description are
+    visible here -- an issue attached through the sidebar is reported
+    by the GraphQL API alone.  Cross-repository references are dropped
+    too, because the App is not necessarily installed on the other end.
+    """
+    return sorted({
+        int(match['number'])
+        for match in CLOSING_KEYWORDS_RE.finditer(pr_body or '')
+        if (match['slug'] or match['url_slug'] or repo_slug).lower()
+        == repo_slug.lower()
+    })
+
+
+async def collect_requirement_labels(
+        gh_api, *, repo_slug, pull_request, requirements,
+):
+    """Map every label that gets a vote to where it was picked up.
+
+    The pull request's own labels always count and map to ``None``.  One
+    that already carries a label the config votes on speaks for itself,
+    so the issues it closes are consulted only when it carries none of
+    them -- those issues tend to be high-level and to span several pull
+    requests, which would make their labels the louder voice.
+    """
+    label_origins = {
+        label['name']: None for label in pull_request['labels']
+    }
+    if label_origins.keys() & requirements.keys():
+        return label_origins
+
+    for issue_number in find_linked_issue_numbers(
+            pull_request['body'], repo_slug,
+    ):
+        try:
+            linked_issue = await gh_api.getitem(
+                f'/repos/{repo_slug!s}/issues/{issue_number:d}',
+            )
+        except gidgethub.HTTPException as lookup_error:
+            logger.info(
+                'Ignoring the linked issue #%d, GitHub said %s',
+                issue_number,
+                lookup_error.status_code,
+            )
+            continue
+
+        for label in linked_issue['labels']:
+            label_origins.setdefault(label['name'], issue_number)
+
+    return label_origins
+
+
+def find_unmet_change_type_requirements(
+        labels, requirements, fragment_types,
+):
+    """Map each demanding label to the change types no fragment covers.
+
+    ``requirements`` comes straight out of the repository config and
+    maps a label name to the change types that satisfy it.  A label
+    contributes a requirement only while it applies to the pull request,
+    and a single fragment of any of the listed types settles it.
+    """
+    return {
+        label: accepted_types
+        for label, accepted_types in requirements.items()
+        if label in labels
+        and not fragment_types & as_change_type_set(accepted_types)
+    }
+
+
+def label_origin_note(label_origins, label):
+    """Name the linked issue a demanding label was inherited from."""
+    issue_number = (label_origins or {}).get(label)
+    return '' if issue_number is None else f' (from #{issue_number:d})'
+
+
+def as_change_type_set(accepted_types):
+    """Normalise one config entry into a set of change type names."""
+    return (
+        {accepted_types} if isinstance(accepted_types, str)
+        else set(accepted_types)
+    )
+
+
+def describe_change_notes(fragments, fragment_re):
+    """List the change notes found, naming the issues they refer to.
+
+    Towncrier only treats the part before the first dot as an issue
+    reference when it is a number, and so does this: a slug like
+    ``smth-else`` names nothing to link to.
+    """
+    lines = []
+    for fragment in fragments:
+        issue_number = fragment_re.search(fragment.path).group('issue_number')
+        reference = f' -- #{issue_number!s}' if issue_number.isdigit() else ''
+        lines.append(f'* `{fragment.path!s}`{reference!s}')
+    return '\n'.join(lines)
+
+
+# Every argument here is keyword-only and names one independent input of
+# the rendered check run, so bundling them would only add indirection:
+# pylint: disable-next=too-many-arguments
+def build_check_result(
+        *, title_prefix, epilogue, fragments_added, fragments_required,
+        fragment_re, unmet_change_type_requirements=None,
+        label_origins=None, overfull_change_notes=(), more_requested=False,
+):
+    """Compose the Checks API conclusion and output for a scanned PR."""
+    if fragments_added and unmet_change_type_requirements:
+        demands = '\n'.join(
+            f'* `{label!s}`'
+            f'{label_origin_note(label_origins, label)!s} '
+            'wants a change note of type '
+            + ' or '.join(
+                f'`{change_type!s}`'
+                for change_type in sorted(as_change_type_set(accepted_types))
+            )
+            for label, accepted_types in sorted(
+                unmet_change_type_requirements.items(),
+            )
+        )
+        return 'failure', {
+            'title':
+                f'{title_prefix!s}'
+                'History fragments of the wrong type',
+            'text':
+                'The following news fragments found:'
+                '\n\n'
+                f'{describe_change_notes(fragments_added, fragment_re)!s}'
+                '\n\n'
+                f'Pattern: {fragment_re}',
+            'summary':
+                'Close! This change is recorded, but its labels ask for '
+                'a different kind of change note:'
+                '\n\n'
+                f'{demands!s}'
+                f'{epilogue!s}',
+        }
+
+    if fragments_added and more_requested:
+        return 'action_required', {
+            'title':
+                f'{title_prefix!s}'
+                'A maintainer asked for more',
+            'text':
+                'The following news fragments found:'
+                '\n\n'
+                f'{describe_change_notes(fragments_added, fragment_re)!s}'
+                '\n\n'
+                f'Pattern: {fragment_re}',
+            'summary':
+                'This change is recorded, but a maintainer labelled the '
+                'pull request asking for the change notes to be extended '
+                '-- reworded, split up, or joined by another one.'
+                '\n\n'
+                'Read the review comments for what exactly is missing. '
+                'The label comes off by itself once you push again.'
+                f'{epilogue!s}',
+        }
+
+    if fragments_added:
+        return 'success', {
+            'title': f'{title_prefix!s}Good to go',
+            'text':
+                'The following news fragments found:'
+                '\n\n'
+                f'{describe_change_notes(fragments_added, fragment_re)!s}'
+                '\n\n'
+                f'Pattern: {fragment_re}',
+            'summary':
+                'Great! This change has been recorded to the chronicles'
+                '\n\n'
+                '![You are good at keeping records! '
+                'Image source: Unsplash ID=bByhWydZLW0]'
+                '(https://source.unsplash.com/bByhWydZLW0/1600x500)'
+                f'{epilogue!s}',
+        }
+
+    if overfull_change_notes:
+        dropped = '\n'.join(
+            f'* `{note.path!s}`' for note in overfull_change_notes
+        )
+        return 'failure', {
+            'title':
+                f'{title_prefix!s}'
+                'History fragment expected to be empty',
+            'text':
+                'The following news fragments carry text that would '
+                f'never be rendered: {overfull_change_notes!r}',
+            'summary':
+                'Almost! Towncrier is configured to count the change '
+                'note types below without showing their contents '
+                '(`showcontent = false`), so the text in these files '
+                'will not reach the 📝 changelog:'
+                '\n\n'
+                f'{dropped!s}'
+                '\n\n'
+                'Either empty the file or pick a change note type whose '
+                'body gets rendered.'
+                f'{epilogue!s}',
+        }
+
+    if not fragments_required:
+        return 'neutral', {
+            'title':
+                f'{title_prefix!s}'
+                'Nothing to do — change note not required',
+            'summary':
+                'This PR looks like a release preparation meaning that '
+                'it removes the existing change notes and adds them to '
+                'the user-facing 📝 changelog.'
+                '\n\n'
+                'Normally, such changes do not expect a change notes '
+                'so you do not need to worry about adding one.'
+                f'{epilogue!s}',
+        }
+
+    return 'failure', {
+        'title':
+            f'{title_prefix!s}'
+            'History fragments missing',
+        'text': f'No files matching {fragment_re} pattern added',
+        'summary':
+            'Oops... This change does not have a record in the '
+            'archives. Just as if it never happened!'
+            '\n\n'
+            '![Keeping chronicles is important! '
+            'Image source: Unsplash ID=VSE71nAZhU8]'
+            '(https://source.unsplash.com/VSE71nAZhU8/1600x500)'
+            f'{epilogue!s}',
+    }
+
+
+def build_change_note_actions(*, demanded_types, known_types):
+    """Offer up to three buttons creating an empty change note.
+
+    The Checks API only fits three actions on a check run, so the types
+    the pull request labels actually ask for come first and the ones
+    towncrier merely knows about fill whatever room is left.
+
+    Types towncrier does not know are dropped: a fragment of such a type
+    would not satisfy the very check offering to create it.  So are types
+    too long to name in an action identifier.
+    """
+    candidates = [
+        change_type for change_type in demanded_types
+        if change_type in known_types
+    ]
+    candidates += [
+        change_type for change_type in known_types
+        if change_type not in candidates
+    ]
+    return [
+        {
+            'label': change_type,
+            'description': f'Add an empty {change_type!s} change note',
+            'identifier': f'{CHANGE_NOTE_ACTION_PREFIX!s}{change_type!s}',
+        }
+        for change_type in candidates
+        if len(change_type) <= MAX_CHANGE_TYPE_LENGTH
+    ][:MAX_CHECK_RUN_ACTIONS]
 
 
 def is_blacklisted(actor, blacklist):
@@ -452,66 +865,3 @@ def is_blacklisted(actor, blacklist):
             return True
 
     return False
-
-
-def is_a_release_pr(diff, tc_fragment_re, towncrier_config):
-    """Detect whether the current PR is a release.
-
-    The heuristic is simply checking if the PR has additions to the
-    changelog file combined with removal of the old change fragments.
-    """
-    fallback_changelog_filename = 'NEWS.rst'
-
-    changelog_filename = (
-        towncrier_config.get('filename', '')
-        or fallback_changelog_filename
-    )
-
-    any_change_fragments_removed = False
-    changelog_file_added = False
-
-    for file_entry in diff:
-        if not changelog_file_added and file_entry.path == changelog_filename:
-            changelog_file_added = bool(file_entry.added)
-
-        if (
-                not any_change_fragments_removed
-                and file_entry.is_removed_file
-                and tc_fragment_re.search(file_entry.path)
-        ):
-            any_change_fragments_removed = True
-
-        if any_change_fragments_removed and changelog_file_added:
-            return True
-
-    return False
-
-
-def requires_changelog(diff, tc_fragment_re, config_paths, towncrier_config):
-    """Check whether a changelog fragment is needed for the changes."""
-    is_release = is_a_release_pr(
-        diff, tc_fragment_re, towncrier_config=towncrier_config,
-    )
-    if is_release:
-        return False
-
-    file_paths = (f.path for f in diff)
-
-    include_paths = config_paths.get('include', [])
-    exclude_paths = config_paths.get('exclude', [])
-
-    paths_gen = (p for p in file_paths)
-
-    if include_paths:
-        paths_gen = (
-            p for p in paths_gen
-            if any(p.startswith(i) for i in include_paths)
-        )
-
-    if exclude_paths:
-        paths_gen = (
-            p for p in paths_gen
-            if not any(p.startswith(e) for e in exclude_paths)
-        )
-
-    return next(paths_gen, False) is not False
