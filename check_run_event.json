@@ -6,27 +6,34 @@
       "id": 0,
       "pull_requests": [
         {
+          "url": "https://api.github.com/repos/sanitizers/browntruck/pulls/1",
+          "id": 1,
           "number": 1,
           "head": {
             "ref": "feature/github-app-aiohttp",
             "sha": "f2114ef"
           },
-          "issue_url":
-          "https://api.github.com/repos/sanitizers/browntruck/issues/1",
-          "user": {
-            "login": "test_bot",
-            "type": "User"
+          "base": {
+            "ref": "master",
+            "sha": "deadbee"
           }
         }
-      ]
+      ],
+      "head_sha": "f2114ef"
     }
   },
-  "requested_action": {"identifier": 0},
+  "requested_action": {
+    "identifier": 0
+  },
   "action": "rerequested",
-  "installation": {"id": 491111},
-  "repository": {"full_name": "sanitizers/browntruck"},
+  "installation": {
+    "id": 491111
+  },
+  "repository": {
+    "full_name": "sanitizers/browntruck"
+  },
   "sender": {
-      "login": "test_bot",
-      "type": "Bot"
+    "login": "test_bot",
+    "type": "Bot"
   }
 }
