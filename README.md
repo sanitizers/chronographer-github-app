@@ -20,6 +20,14 @@ branch-protection-check-name: Timeline protection
 
 enforce-name:
   suffix: .rst  # can be empty or `.md` too
+  # Demand that the part before the first dot be an issue or pull
+  # request number, rejecting slugs like `news/smth-else.doc`:
+  issue-number: false  # default: `false`
+  # What to do about the counter towncrier allows between the change
+  # note type and its suffix, as in `news/42.bugfix.1.rst`:
+  # `allow` (default) tolerates it, `require` demands it and `forbid`
+  # rejects it.
+  number-part: allow  # default: `allow`
 
 exclude:
   bots:
@@ -29,9 +37,25 @@ exclude:
   humans:
   - pyup-bot
 
+# Let the issues a pull request closes vote on the change note type
+# when the pull request itself carries none of the `require-change-types`
+# labels:
+infer-labels-from-linked-issues: false  # default: `false`
+
 labels:
   fragment-provided: change note detected  # default: `bot:chronographer:provided`, disable with `~`
   skip-changelog: skip news  # default: `bot:chronographer:skip`
+
+# Labels that demand a change note of a particular towncrier type.  A
+# label only asks for something while it is set on the pull request, and
+# one fragment of any of the listed types settles it.  Several labels at
+# once means several demands, each needing its own fragment:
+require-change-types:
+  enhancement:
+  - contrib
+  - feature
+  bug:
+  - bugfix
 
 paths:  # relative modified file paths that do or don't need changelog mention
   exclude: []
@@ -40,6 +64,59 @@ paths:  # relative modified file paths that do or don't need changelog mention
 
 ...
 ```
+
+# What counts as a change note
+
+A file matching the towncrier fragment pattern satisfies the check when
+the pull request adds it, and also when it merely edits one that is
+already there -- amending an existing fragment lands in the changelog
+just the same.
+
+Towncrier can be told to count a change note without ever showing its
+contents (`showcontent = false`, typically for a `trivial` type). Text
+put into such a file is silently dropped at build time, so Chronographer
+does not accept it: the check run fails asking for the file to be
+emptied, or for a type whose body does get rendered.
+
+
+# Creating change notes from the check run
+
+A failing check run offers up to three buttons, one per change note type,
+that commit an empty change note to the pull request branch. The file is
+seeded with the pull request title so that reviewers can refine it through
+suggested changes rather than having to write it from scratch.
+
+The types the pull request labels ask for through `require-change-types`
+come first; the rest of the towncrier types fill whatever room is left of
+the three slots the Checks API allows. A type whose name does not fit into
+an action identifier -- 13 characters, once the namespace prefix is
+accounted for -- is not offered.
+
+This needs the App to hold the `contents: write` permission, and the
+commit lands on the head branch, so it only works while the head
+repository is still around. When the push is refused, the check run says
+so instead of failing silently.
+
+# Inheriting the demands of a linked issue
+
+Contributors label pull requests far less reliably than maintainers label
+issues, so `require-change-types` can read the labels off the issues a
+pull request closes instead. Turn it on with
+`infer-labels-from-linked-issues: true`.
+
+A pull request that already carries one of the labels the config votes on
+speaks for itself and its linked issues are never consulted -- an issue is
+often high-level and linked from several pull requests, which would make
+its labels the louder voice. Otherwise, every label of every closed issue
+joins the vote, and the check run names the issue each inherited demand
+came from.
+
+Only the closing keywords spelled out in the pull request description are
+visible -- `closes #12`, `fixes GH-12`, `resolves
+https://github.com/{owner}/{repo}/issues/12` and the like. An issue
+attached through the sidebar is reported by the GraphQL API alone, and a
+reference to another repository is dropped because the App is not
+necessarily installed there.
 
 # Running the app
 ## Local development
@@ -52,11 +129,26 @@ paths:  # relative modified file paths that do or don't need changelog mention
    ```
 3. `python3.7 -m chronographer`
 
+# Running the tests
+```console
+$ python -Im pip install -r requirements.txt
+$ python -Im pip install pytest
+$ python -Im pytest
+```
+
+The linters run the same way, PyLint included — pre-commit.ci skips that
+one because `local` hooks cannot run there:
+```console
+$ python -Im pre_commit run --all-files
+```
+
 # Known issues/limitations
 
-* Re-requesting a check run from Checks page in PRs doesn't always work.
-  For a mysterious reason, [sometimes GitHub attaches a list of PRs to the events but sometimes that list is empty
-  `[complain here]`](
-  https://github.community/t5/GitHub-API-Development-and/BUG-Sometimes-rerequested-check-run-events-don-t-contain-a-PR/m-p/26964/thread-id/2189
-  ). The link is historic and the discussion contents seem to have been
-  lost during GitHub's platform migrations.
+* Re-requesting a check run used to be documented here as failing "for a
+  mysterious reason" whenever GitHub sent an empty list of PRs with the
+  event. It is not mysterious: the `pull_requests` array of a check suite
+  only lists pull requests whose head branch lives in *this* repository, so
+  it is empty for every PR sent from a fork. The entries it does carry are
+  stub objects without `user`, `labels` or `issue_url`. Both cases are now
+  handled by looking the pull request up through the API instead of reading
+  it out of the webhook payload.

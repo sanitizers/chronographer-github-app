@@ -1,6 +1,5 @@
 {
   "action": "synchronize",
-  "sender": {"login": "curl"},
   "number": 2,
   "installation": {"id": 491111},
   "repository": {"full_name": "sanitizers/browntruck"},
@@ -17,7 +16,8 @@
     "user": {
       "login": "test_bot",
       "type": "User"
-    }
+    },
+    "labels": []
   },
   "sender": {
       "login": "test_bot",
