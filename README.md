@@ -41,6 +41,28 @@ paths:  # relative modified file paths that do or don't need changelog mention
 ...
 ```
 
+# Configuring the deployment
+
+Some settings belong to whoever runs this app rather than to the
+repositories it watches, so they are read from the environment instead
+of `.github/chronographer.yml`:
+
+* `CHRONOGRAPHER_HTTP_CACHE_ENTRIES` — how many GitHub API `GET`
+  responses to keep around for revalidation. The repository config, the
+  towncrier config and the pull request diff are re-read on every event
+  a pull request emits, so the app remembers their `ETag`s and asks
+  GitHub whether they changed; an unchanged one comes back as an empty
+  `304` that costs no rate limit budget. The entries are shared by
+  every event the process handles and the least recently used one is
+  dropped once the cache is full. It defaults to `128`; raise it for a
+  busy deployment, or set it to `0` to send plain unconditional
+  requests:
+  ```console
+  CHRONOGRAPHER_HTTP_CACHE_ENTRIES=512
+  ```
+  Nothing served from this cache can be stale — an entry is only ever
+  used to *ask* GitHub, which stays free to answer with fresh contents.
+
 # Running the app
 ## Local development
 1. Copy a dotenv config template: `cp -v .env{.example,}`
@@ -52,11 +74,26 @@ paths:  # relative modified file paths that do or don't need changelog mention
    ```
 3. `python3.7 -m chronographer`
 
+# Running the tests
+```console
+$ python -Im pip install -r requirements.txt
+$ python -Im pip install pytest
+$ python -Im pytest
+```
+
+The linters run the same way, PyLint included — pre-commit.ci skips that
+one because `local` hooks cannot run there:
+```console
+$ python -Im pre_commit run --all-files
+```
+
 # Known issues/limitations
 
-* Re-requesting a check run from Checks page in PRs doesn't always work.
-  For a mysterious reason, [sometimes GitHub attaches a list of PRs to the events but sometimes that list is empty
-  `[complain here]`](
-  https://github.community/t5/GitHub-API-Development-and/BUG-Sometimes-rerequested-check-run-events-don-t-contain-a-PR/m-p/26964/thread-id/2189
-  ). The link is historic and the discussion contents seem to have been
-  lost during GitHub's platform migrations.
+* Re-requesting a check run used to be documented here as failing "for a
+  mysterious reason" whenever GitHub sent an empty list of PRs with the
+  event. It is not mysterious: the `pull_requests` array of a check suite
+  only lists pull requests whose head branch lives in *this* repository, so
+  it is empty for every PR sent from a fork. The entries it does carry are
+  stub objects without `user`, `labels` or `issue_url`. Both cases are now
+  handled by looking the pull request up through the API instead of reading
+  it out of the webhook payload.
