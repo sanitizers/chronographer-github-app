@@ -99,33 +99,32 @@ async def on_install(
 )
 @process_event_actions('check_run', {'rerequested'})
 @process_event_actions('check_suite', {'rerequested'})
-# pylint: disable=too-many-locals
+# This handler is long enough to trip both size checks and wants a
+# split, which is a refactor of its own:
+# pylint: disable=too-many-locals,too-many-statements
 async def on_pr(event):
     """React to GitHub App pull request webhook event."""
     event_repository = event.data['repository']
     repo_slug = event_repository['full_name']
     check_runs_base_uri = f'/repos/{repo_slug}/check-runs'
-    if event.event == 'pull_request':
-        pull_request = event.data['pull_request']
-    elif event.event == 'check_run':
-        pull_request = (
-            event.data['check_run']['check_suite']['pull_requests'][0]
-        )
-    elif event.event == 'check_suite':
-        pull_request = (
-            event.data['check_suite']['pull_requests'][0]
-        )
+
+    gh_api = RUNTIME_CONTEXT.app_installation_client
+
+    pull_request = await resolve_pull_request(event, repo_slug, gh_api)
+    if pull_request is None:
+        return  # Interrupt the webhook event processing
+
     pr_author = pull_request['user']
     pr_labels = {label['name'] for label in pull_request['labels']}
+    pr_labels_list = ', '.join(pr_labels)
+    pr_number = pull_request['number']
     diff_url = (
         f'https://github.com/{repo_slug}'
-        f'/pull/{pull_request["number"]:d}.diff'
+        f'/pull/{pr_number:d}.diff'
     )
     head_branch = pull_request['head']['ref']
     head_sha = pull_request['head']['sha']
     repo_default_branch = event_repository['default_branch']
-
-    gh_api = RUNTIME_CONTEXT.app_installation_client
 
     repo_config = await get_chronographer_config(ref=repo_default_branch)
     paths_config = repo_config.get(
@@ -165,7 +164,7 @@ async def on_pr(event):
     logger.info(
         'Checking if `%s` label is present among these PR labels: `%s`.',
         repo_skip_label,
-        ', '.join(pr_labels) or 'NO LABELS',
+        pr_labels_list or 'NO LABELS',
     )
     if repo_skip_label in pr_labels:
         logger.info(
@@ -187,7 +186,7 @@ async def on_pr(event):
                         'title':
                             f'{checks_summary_title_prefix!s}'
                             'Nothing to do — change note not required',
-                        'text': f'Labels: {", ".join(pr_labels)}',
+                        'text': f'Labels: {pr_labels_list!s}',
                         'summary':
                             'Heeeeey!'
                             '\n\n'
@@ -262,11 +261,12 @@ async def on_pr(event):
         'Check suite ID is %s',
         resp['check_suite']['id'],
     )
+    check_run_id = resp['id']
     logger.info(
         'Check run ID is %s',
-        resp['id'],
+        check_run_id,
     )
-    check_runs_updates_uri = f'{check_runs_base_uri}/{resp["id"]:d}'
+    check_runs_updates_uri = f'{check_runs_base_uri}/{check_run_id:d}'
 
     logger.info("Here's the diff URL: %s", diff_url)
     diff_text = await gh_api.getitem(
@@ -315,7 +315,8 @@ async def on_pr(event):
     )
 
     if news_fragments_added and fragment_provided_label is not None:
-        labels_url = f'{pull_request["issue_url"]}/labels'
+        issue_url = pull_request['issue_url']
+        labels_url = f'{issue_url!s}/labels'
         await gh_api.post(
             labels_url,
             preview_api_version='symmetra',
@@ -333,57 +334,20 @@ async def on_pr(event):
         towncrier_config=towncrier_config,
     )
 
-    report_success = not news_fragments_required or news_fragments_added
+    conclusion, check_output = build_check_result(
+        title_prefix=checks_summary_title_prefix,
+        epilogue=checks_summary_epilogue,
+        fragments_added=news_fragments_added,
+        fragments_required=news_fragments_required,
+        fragment_re=_tc_fragment_re,
+    )
 
     update_check_req = attr.evolve(
         update_check_req,
         status='completed',
-        conclusion='success' if news_fragments_added else
-        'neutral' if not news_fragments_required else 'failure',
+        conclusion=conclusion,
         completed_at=f'{datetime.utcnow().isoformat()}Z',
-        output={
-            # Fragments added
-            'title': f'{checks_summary_title_prefix!s}Good to go',
-            'text':
-                'The following news fragments found: '
-                f'{news_fragments_added!r}'
-                '\n\n'
-                f'Pattern: {_tc_fragment_re}',
-            'summary':
-                'Great! This change has been recorded to the chronicles'
-                '\n\n'
-                '![You are good at keeping records! '
-                'Image source: Unsplash ID=bByhWydZLW0]'
-                '(https://source.unsplash.com/bByhWydZLW0/1600x500)'
-                f'{checks_summary_epilogue!s}',
-        } if report_success else {
-            # Fragments not added and not required either
-            'title':
-                f'{checks_summary_title_prefix!s}'
-                'Nothing to do — change note not required',
-            'summary':
-                'This PR looks like a release preparation meaning that '
-                'it removes the existing change notes and adds them to '
-                'the user-facing 📝 changelog.'
-                '\n\n'
-                'Normally, such changes do not expect a change notes '
-                'so you do not need to worry about adding one.'
-                f'{checks_summary_epilogue!s}',
-        } if not news_fragments_required else {
-            # Fragments not added but are expected
-            'title':
-                f'{checks_summary_title_prefix!s}'
-                'History fragments missing',
-            'text': f'No files matching {_tc_fragment_re} pattern added',
-            'summary':
-                'Oops... This change does not have a record in the '
-                'archives. Just as if it never happened!'
-                '\n\n'
-                '![Keeping chronicles is important! '
-                'Image source: Unsplash ID=VSE71nAZhU8]'
-                '(https://source.unsplash.com/VSE71nAZhU8/1600x500)'
-                f'{checks_summary_epilogue!s}',
-        },
+        output=check_output,
     )
     resp = await gh_api.patch(
         check_runs_updates_uri,
@@ -395,8 +359,106 @@ async def on_pr(event):
     logger.info('gh_api=%s', gh_api)
 
 
+async def resolve_pull_request(event, repo_slug, gh_api):
+    """Look up the full pull request payload an event points at.
+
+    ``pull_request`` events carry it inline.  The Checks API only
+    embeds stub pull request objects that lack ``user``, ``labels``
+    and ``issue_url`` -- and it leaves that list empty altogether when
+    the head branch lives in a fork -- so re-requested checks need an
+    extra round trip.
+
+    Returns ``None`` when no pull request is associated with the event.
+    """
+    if event.event == 'pull_request':
+        return event.data['pull_request']
+
+    check_suite = (
+        event.data['check_run']['check_suite'] if event.event == 'check_run'
+        else event.data['check_suite']
+    )
+
+    pull_request_stubs = check_suite['pull_requests']
+    if pull_request_stubs:
+        pr_number = pull_request_stubs[0]['number']
+        return await gh_api.getitem(f'/repos/{repo_slug}/pulls/{pr_number:d}')
+
+    # Fork head branches never show up in ``pull_requests``, but the
+    # head commit still knows which pull requests it belongs to:
+    head_sha = check_suite['head_sha']
+    associated_pull_requests = await gh_api.getitem(
+        f'/repos/{repo_slug}/commits/{head_sha}/pulls',
+    )
+    if associated_pull_requests:
+        return associated_pull_requests[0]
+
+    logger.info(
+        'Skipping the %s event because no pull request is associated '
+        'with the head commit %s',
+        event.event,
+        head_sha,
+    )
+    return None
+
+
+def build_check_result(
+        *, title_prefix, epilogue, fragments_added, fragments_required,
+        fragment_re,
+):
+    """Compose the Checks API conclusion and output for a scanned PR."""
+    if fragments_added:
+        return 'success', {
+            'title': f'{title_prefix!s}Good to go',
+            'text':
+                'The following news fragments found: '
+                f'{fragments_added!r}'
+                '\n\n'
+                f'Pattern: {fragment_re}',
+            'summary':
+                'Great! This change has been recorded to the chronicles'
+                '\n\n'
+                '![You are good at keeping records! '
+                'Image source: Unsplash ID=bByhWydZLW0]'
+                '(https://source.unsplash.com/bByhWydZLW0/1600x500)'
+                f'{epilogue!s}',
+        }
+
+    if not fragments_required:
+        return 'neutral', {
+            'title':
+                f'{title_prefix!s}'
+                'Nothing to do — change note not required',
+            'summary':
+                'This PR looks like a release preparation meaning that '
+                'it removes the existing change notes and adds them to '
+                'the user-facing 📝 changelog.'
+                '\n\n'
+                'Normally, such changes do not expect a change notes '
+                'so you do not need to worry about adding one.'
+                f'{epilogue!s}',
+        }
+
+    return 'failure', {
+        'title':
+            f'{title_prefix!s}'
+            'History fragments missing',
+        'text': f'No files matching {fragment_re} pattern added',
+        'summary':
+            'Oops... This change does not have a record in the '
+            'archives. Just as if it never happened!'
+            '\n\n'
+            '![Keeping chronicles is important! '
+            'Image source: Unsplash ID=VSE71nAZhU8]'
+            '(https://source.unsplash.com/VSE71nAZhU8/1600x500)'
+            f'{epilogue!s}',
+    }
+
+
 async def compile_towncrier_fragments_regex(name_settings, towncrier_config):
     """Create fragments check regex based on the towncrier config."""
+    # The named placeholders below document what each chunk of the regex is
+    # for, which an f-string would not:
+    # pylint: disable=consider-using-f-string
     fallback_base_dir = 'news'
 
     # e.g. ``.rst``:
