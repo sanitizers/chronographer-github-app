@@ -1,0 +1,31 @@
+---
+
+name: 🚀
+
+on:  # yamllint disable-line rule:truthy
+  push:
+  pull_request:
+
+jobs:
+  boot:
+    name: boot @ Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+        # The version the app is deployed under today, and the one it
+        # is being moved to (gh-63):
+        - '3.13'
+        - '3.14'
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install the runtime dependencies
+      run: python -Im pip install -r requirements.txt
+    - name: Boot the app
+      run: ./test_boot.sh
+
+...
