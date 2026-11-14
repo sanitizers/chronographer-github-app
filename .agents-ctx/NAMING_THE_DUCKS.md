@@ -1,0 +1,27 @@
+# Naming the Ducks
+
+Canonical names for this project, and how to refer to it in
+prose. Other files in `.agents-ctx/` (and any generated content)
+should say "the project" rather than hardcoding one of these --
+reach for a specific name only when the distinction actually
+matters (e.g. citing a package, an import, or a repository URL).
+
+## App name: Chronographer
+
+This is a GitHub App, deployed as a service -- nothing is
+published to PyPI. In prose, it's "Chronographer".
+
+## Python import name: `chronographer`
+
+The package the service runs, as `python -m chronographer`.
+
+## GitHub repository slug: `sanitizers/chronographer-github-app`
+
+Use it verbatim when it's actually the repository being
+referenced (URLs, `gh` invocations, PR/issue citations) -- not as
+a stand-in for the app's name in prose.
+
+## Don't confuse it with octomachinery
+
+The app is built on `sanitizers/octomachinery`, a separate
+framework project in its own repository. Say which one is meant.
